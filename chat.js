@@ -13,10 +13,10 @@ exports.handler = async (event) => {
     }
 
     if (event.httpMethod !== 'POST') {
-        return { 
-            statusCode: 405, 
+        return {
+            statusCode: 405,
             headers: { 'Access-Control-Allow-Origin': '*' },
-            body: 'Method not allowed' 
+            body: 'Method not allowed'
         };
     }
 
@@ -45,22 +45,22 @@ exports.handler = async (event) => {
         const data = await res.json();
         const reply = (data.content || []).map(b => b.text || '').join('').trim();
 
-        return { 
-            statusCode: 200, 
-            headers: { 
+        return {
+            statusCode: 200,
+            headers: {
                 'Content-Type': 'application/json',
-                'Access-Control-Allow-Origin': '*' 
-            }, 
-            body: JSON.stringify({ reply: reply || 'Sorry, I could not answer that.' }) 
+                'Access-Control-Allow-Origin': '*'
+            },
+            body: JSON.stringify({ reply: reply || 'Sorry, I could not answer that.' })
         };
     } catch (e) {
-        return { 
-            statusCode: 500, 
-            headers: { 
+        return {
+            statusCode: 500,
+            headers: {
                 'Content-Type': 'application/json',
-                'Access-Control-Allow-Origin': '*' 
-            }, 
-            body: JSON.stringify({ error: 'server error' }) 
+                'Access-Control-Allow-Origin': '*'
+            },
+            body: JSON.stringify({ error: 'server error' })
         };
     }
 };
