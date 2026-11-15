@@ -12,13 +12,17 @@ module.exports = async (req, res) => {
     }
 
     try {
-        const { messages } = req.body || {};
-        const latestMessage = messages && messages.length > 0 ? messages[messages.length - 1].content : 'Hello';
+        const body = req.body || {};
+        const messages = body.messages || [];
+        const latestMessage = messages.length > 0 ? messages[messages.length - 1].content : 'Hello';
 
-        const apiKey = process.env.GEMINI_API_KEY || process.env.ANTHROPIC_API_KEY;
-        if (!apiKey) {
-            return res.status(500).json({ error: 'API key not configured in Vercel settings.' });
+        const rawKey = process.env.GEMINI_API_KEY || process.env.ANTHROPIC_API_KEY;
+        if (!rawKey) {
+            return res.status(200).json({ reply: "API key is missing in Vercel settings. Please check your environment variables." });
         }
+
+        // Clean up any accidental spaces or quotes from the key
+        const apiKey = rawKey.trim().replace(/^["']|["']$/g, '');
 
         const geminiRes = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`, {
             method: 'POST',
@@ -38,15 +42,15 @@ module.exports = async (req, res) => {
         const data = await geminiRes.json();
 
         if (!geminiRes.ok) {
-            console.error('Gemini API error details:', JSON.stringify(data));
-            return res.status(500).json({ error: data.error?.message || 'Gemini API rejected the request.' });
+            console.error('Gemini API Error:', JSON.stringify(data));
+            return res.status(200).json({ reply: `Gemini API Error: ${data.error?.message || 'Invalid request'}` });
         }
 
         const reply = data.candidates?.[0]?.content?.parts?.[0]?.text || 'Sorry, I could not process that.';
         return res.status(200).json({ reply });
 
     } catch (e) {
-        console.error('Server catch error:', e);
-        return res.status(500).json({ error: 'Internal server error occurred.' });
+        console.error('Server Crash:', e);
+        return res.status(200).json({ reply: 'Server error occurred while connecting to AI.' });
     }
 };
