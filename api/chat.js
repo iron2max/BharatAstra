@@ -23,8 +23,8 @@ module.exports = async (req, res) => {
 
         const apiKey = rawKey.trim().replace(/^["']|["']$/g, '');
 
-        // Correct endpoint using the official Gemini 2.0 Flash model and secure environment variable
-        const geminiRes = await fetch(`https://generativelanguage.googleapis.com/v1/models/gemini-2.0-flash:generateContent?key=${apiKey}`, {
+        // Updated endpoint to use gemini-3.8-flash as required
+        const geminiRes = await fetch(`https://generativelanguage.googleapis.com/v1/models/gemini-3.8-flash:generateContent?key=${apiKey}`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
@@ -46,7 +46,6 @@ module.exports = async (req, res) => {
             return res.status(200).json({ reply: `Gemini Error: ${data.error?.message || 'Invalid request'}` });
         }
 
-        // Correct response parsing for Gemini API structure
         const reply = data.candidates?.[0]?.content?.parts?.[0]?.text || 'Sorry, I could not process that.';
         return res.status(200).json({ reply });
 
