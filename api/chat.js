@@ -15,16 +15,14 @@ module.exports = async (req, res) => {
         const { messages } = req.body || {};
         const latestMessage = messages && messages.length > 0 ? messages[messages.length - 1].content : 'Hello';
 
-        const apiKey = process.env.ANTHROPIC_API_KEY || process.env.GEMINI_API_KEY;
+        const apiKey = process.env.GEMINI_API_KEY || process.env.ANTHROPIC_API_KEY;
         if (!apiKey) {
-            return res.status(500).json({ error: 'API key not configured on server' });
+            return res.status(500).json({ error: 'API key not configured in Vercel settings.' });
         }
 
-        const geminiRes = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-3.8-flash:generateContent?key=${apiKey}`, {
+        const geminiRes = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`, {
             method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
+            headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
                 contents: [
                     {
@@ -40,15 +38,15 @@ module.exports = async (req, res) => {
         const data = await geminiRes.json();
 
         if (!geminiRes.ok) {
-            console.error('Gemini API error:', data);
-            return res.status(500).json({ error: data.error?.message || 'Gemini error' });
+            console.error('Gemini API error details:', JSON.stringify(data));
+            return res.status(500).json({ error: data.error?.message || 'Gemini API rejected the request.' });
         }
 
         const reply = data.candidates?.[0]?.content?.parts?.[0]?.text || 'Sorry, I could not process that.';
         return res.status(200).json({ reply });
 
     } catch (e) {
-        console.error('Server error:', e);
-        return res.status(500).json({ error: 'server error' });
+        console.error('Server catch error:', e);
+        return res.status(500).json({ error: 'Internal server error occurred.' });
     }
 };
