@@ -10,7 +10,7 @@
         href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;700;900&family=Rajdhani:wght@400;500;600;700&family=Inter:wght@300;400;500;600;700&display=swap"
         rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="web.css">
     <script>
         tailwind.config = { darkMode: 'class', theme: { extend: { colors: { brand: { bg: '#060913', cyan: '#00f2fe', fire: '#ff3b30', fireOrange: '#ff9500', flood: '#007aff', success: '#34c759' } }, fontFamily: { orbitron: ['Orbitron', 'sans-serif'], rajdhani: ['Rajdhani', 'sans-serif'], sans: ['Inter', 'sans-serif'] }, animation: { 'spin-slow': 'spin 12s linear infinite', 'radar-sweep': 'radar 4s linear infinite' }, keyframes: { radar: { '0%': { transform: 'rotate(0deg)' }, '100%': { transform: 'rotate(360deg)' } } } } } }
     </script>
@@ -66,6 +66,11 @@
                 <button id="mobileMenuBtn" onclick="toggleMobileMenu()" aria-label="Menu" aria-expanded="false"
                     class="xl:hidden p-2 rounded-lg bg-slate-800/80 border border-slate-700 text-slate-300"><i
                         class="fa-solid fa-bars"></i></button>
+                <button onclick="toggleMuteAudio()" id="muteAudioBtn" aria-label="Mute Audio"
+                    class="px-3 py-2 rounded-lg bg-slate-800 hover:bg-slate-700 border border-slate-600 text-white font-orbitron text-xs font-semibold flex items-center gap-1.5">
+                    <i class="fa-solid fa-volume-high" id="muteIcon"></i><span class="hidden sm:inline"
+                        id="muteText">MUTE</span>
+                </button>
                 <button onclick="openAccountModal()" aria-label="Account"
                     class="px-3 sm:px-4 py-2 rounded-lg bg-slate-800 hover:bg-slate-700 border border-slate-600 text-white font-orbitron text-xs font-semibold">
                     <i class="fa-solid fa-user sm:mr-1.5"></i><span class="hidden sm:inline"
@@ -615,7 +620,7 @@
     </div>
 
     <!-- Include external JavaScript -->
-    <script src="script.js"></script>
+    <script src="web.js"></script>
 </body>
 
 </html>

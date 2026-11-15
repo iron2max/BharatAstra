@@ -13,9 +13,25 @@ setInterval(updateMissionClock, 1000);
 updateMissionClock();
 
 let audioEnabled = false;
+let soundMuted = false;
+
 document.addEventListener('click', () => { audioEnabled = true; }, { once: true });
+
+function toggleMuteAudio() {
+    soundMuted = !soundMuted;
+    const icon = $('muteIcon');
+    const text = $('muteText');
+    if (soundMuted) {
+        if (icon) icon.className = "fa-solid fa-volume-xmark text-brand-fire";
+        if (text) text.innerText = "MUTED";
+    } else {
+        if (icon) icon.className = "fa-solid fa-volume-high";
+        if (text) text.innerText = "MUTE";
+    }
+}
+
 function playBeep(freq = 880, dur = 0.2) {
-    if (!audioEnabled) return;
+    if (!audioEnabled || soundMuted) return;
     try {
         const c = new (window.AudioContext || window.webkitAudioContext)(), o = c.createOscillator(), g = c.createGain();
         o.type = 'sawtooth'; o.frequency.value = freq; g.gain.value = 0.1; o.connect(g); g.connect(c.destination); o.start(); o.stop(c.currentTime + dur);
@@ -88,6 +104,7 @@ function renderGlobalFeed() {
 renderGlobalFeed();
 
 function setBanner(cls, dot, html) { $('homepageEmergencyBanner').className = 'relative z-30 ' + cls + ' py-2.5 px-4 text-center text-xs font-mono'; $('bannerStatusDot').className = 'w-2.5 h-2.5 rounded-full animate-ping ' + dot; $('bannerText').innerHTML = html; }
+
 function triggerDemoSimulation(type) {
     const ok = '<span class="text-emerald-400">NORMAL</span>';
     if (type === 'FIRE') {
@@ -103,6 +120,9 @@ function triggerDemoSimulation(type) {
         setBanner('bg-slate-900/90 border-b border-brand-cyan/20', 'bg-brand-success', 'STATUS: <span class="text-brand-success font-bold tracking-wider">NO ACTIVE MAJOR EMERGENCIES REPORTED</span>');
     }
 }
+
+// Default state set explicitly to normal on load to prevent false refresh alerts
+triggerDemoSimulation('NORMAL');
 
 /* ================= MODALS ================= */
 function openEmergencyModal(type, title, loc, desc) {
