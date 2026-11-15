@@ -26,10 +26,11 @@ module.exports = async (req, res) => {
             },
             body: JSON.stringify({
                 model: 'openai/gpt-oss-20b',
+                max_tokens: 150, // Hard cap to prevent essays
                 messages: [
                     {
                         role: 'system',
-                        content: "You are the Astra AI assistant on the Bharat Astra website, a school prototype by Team Horizon (Class 9) for disaster detection and awareness. Answer questions about natural disasters (earthquakes, cyclones, tsunamis, floods, wildfires), preparedness, and safety protocols. Keep answers friendly, clear, and concise. In emergencies, tell users to call 112 in India."
+                        content: "You are Astra AI on Bharat Astra (a Class 9 school prototype by Team Horizon for disaster awareness). Give ultra-short, direct answers (2-3 sentences max, or 3 brief bullet points). Never write long paragraphs or use markdown headers. For emergencies, remind users to call 112 in India."
                     },
                     {
                         role: 'user',
