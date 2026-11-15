@@ -4,10 +4,19 @@ const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': 
 
 function updateMissionClock() {
     const now = new Date();
-    const h = String(now.getHours()).padStart(2, '0');
-    const m = String(now.getMinutes()).padStart(2, '0');
-    const s = String(now.getSeconds()).padStart(2, '0');
-    if ($('liveClock')) $('liveClock').innerText = `${h}:${m}:${s} IST`;
+    let hours = now.getHours();
+    const minutes = String(now.getMinutes()).padStart(2, '0');
+    const seconds = String(now.getSeconds()).padStart(2, '0');
+
+    // Determine AM/PM suffix and convert 24hr to 12hr format
+    const ampm = hours >= 12 ? 'PM' : 'AM';
+    hours = hours % 12;
+    hours = hours ? hoursicks : 12; // the hour '0' should be '12'
+    const formattedHours = String(hours).padStart(2, '0');
+
+    if ($('liveClock')) {
+        $('liveClock').innerText = `${formattedHours}:${minutes}:${seconds} ${ampm} IST`;
+    }
 }
 setInterval(updateMissionClock, 1000);
 updateMissionClock();
