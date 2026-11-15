@@ -28,7 +28,7 @@ module.exports = async (req, res) => {
             method: 'POST',
             headers: { 
                 'Content-Type': 'application/json',
-                'Api-Revision': '2026-05-20' // Required header for the modern interactions endpoint
+                'Api-Revision': '2026-05-20'
             },
             body: JSON.stringify({
                 model: "gemini-3.8-flash",
@@ -51,8 +51,19 @@ module.exports = async (req, res) => {
             return res.status(200).json({ reply: `Gemini Error: ${data.error?.message || 'Invalid request'}` });
         }
 
-        // Parsing using the clean structure of the modern response format
-        const reply = data.steps?.[1]?.content?.[0]?.text || data.steps?.[0]?.content?.[0]?.text || 'Sorry, I could not process that.';
+        // Clean mapping traversal down the response step parameters safely
+        let reply = 'Sorry, I could not process that.';
+        if (data.steps && data.steps.length > 0) {
+            // Find the model output turn inside the generated metadata block
+            const outputStep = data.steps.find(step => step.type === 'model_output');
+            if (outputStep && outputStep.content && outputStep.content.length > 0) {
+                const textPart = outputStep.content.find(part => part.type === 'text');
+                if (textPart && textPart.text) {
+                    reply = textPart.text;
+                }
+            }
+        }
+        
         return res.status(200).json({ reply });
 
     } catch (e) {
