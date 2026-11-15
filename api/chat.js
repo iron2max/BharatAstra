@@ -1,5 +1,4 @@
 module.exports = async (req, res) => {
-    // Handle CORS headers
     res.setHeader('Access-Control-Allow-Origin', '*');
     res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
     res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
@@ -14,36 +13,38 @@ module.exports = async (req, res) => {
 
     try {
         const { messages } = req.body || {};
-        const clean = (messages || []).slice(-10).map(m => ({
-            apiName: undefined,
-            role: m.role === 'assistant' ? 'assistant' : 'user',
-            content: String(m.content).slice(0, 500)
-        }));
+        const latestMessage = messages && messages.length > 0 ? messages[messages.length - 1].content : 'Hello';
 
-        const apiRes = await fetch('https://api.anthropic.com/v1/messages', {
+        const apiKey = process.env.ANTHROPIC_API_KEY;
+        if (!apiKey) {
+            return res.status(500).json({ error: 'Anthropic API key not configured on server' });
+        }
+
+        // Call Anthropic API using the current model
+        const anthropicRes = await fetch('https://api.anthropic.com/v1/messages', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
-                'x-api-key': process.env.ANTHROPIC_API_KEY,
-                'anthropic-version': '2023-06-01'
+                'X-API-Key': apiKey
             },
             body: JSON.stringify({
                 model: 'claude-3-5-sonnet-20241022',
-                max_tokens: 400,
-                system: 'You are the Astra AI assistant on the Bharat Astra website, a school prototype by Team Horizon (Class 9) for disaster detection and awareness. You can answer questions about ANY natural disaster (including earthquakes, cyclones, tsunamis, volcanic eruptions, floods, and wildfires), how they occur, science behind them, preparedness, and safety protocols. Be friendly, clear, and concise. In real emergencies, tell people to call their local emergency number (112 in India) and follow official authorities. Never claim the prototype can predict disasters.',
-                messages: clean
+                max_tokens: 1024,
+                messages: [
+                    { role: 'user', content: latestMessage }
+                ]
             })
         });
 
-        const data = await apiRes.json();
-        
-        if (!apiRes.ok) {
+        const data = await anthropicRes.json();
+
+        if (!anthropicRes.ok) {
             console.error('Anthropic API error:', data);
             return res.status(500).json({ error: data.error?.message || 'Anthropic error' });
         }
 
-        const reply = (data.content || []).map(b => b.text || '').join('').trim();
-        return res.status(200).json({ reply: reply || 'Sorry, I could not answer that.' });
+        const reply = data.candidates?.[0]?.content?.parts?.[0]?.text || 'Sorry, I could not process that.';
+        return res.status(200).json({ reply });
 
     } catch (e) {
         console.error('Server error:', e);
