@@ -11,7 +11,7 @@ function updateMissionClock() {
     // Determine AM/PM suffix and convert 24hr to 12hr format
     const ampm = hours >= 12 ? 'PM' : 'AM';
     hours = hours % 12;
-    hours = hours ? hoursicks : 12; // the hour '0' should be '12'
+    hours = hours ? hours : 12; // the hour '0' should be '12'
     const formattedHours = String(hours).padStart(2, '0');
 
     if ($('liveClock')) {
