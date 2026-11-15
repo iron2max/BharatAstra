@@ -1,0 +1,939 @@
+<!DOCTYPE html>
+<html lang="en" class="dark scroll-smooth">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BHARAT ASTRA | AI-Powered Satellite Fire & Flood Detection</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;700;900&family=Rajdhani:wght@400;500;600;700&family=Inter:wght@300;400;500;600;700&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script>
+        tailwind.config = { darkMode: 'class', theme: { extend: { colors: { brand: { bg: '#060913', cyan: '#00f2fe', fire: '#ff3b30', fireOrange: '#ff9500', flood: '#007aff', success: '#34c759' } }, fontFamily: { orbitron: ['Orbitron', 'sans-serif'], rajdhani: ['Rajdhani', 'sans-serif'], sans: ['Inter', 'sans-serif'] }, animation: { 'spin-slow': 'spin 12s linear infinite', 'radar-sweep': 'radar 4s linear infinite' }, keyframes: { radar: { '0%': { transform: 'rotate(0deg)' }, '100%': { transform: 'rotate(360deg)' } } } } } }
+    </script>
+    <style>
+        section[id] {
+            scroll-margin-top: 6rem
+        }
+
+        body {
+            background: #060913;
+            color: #e2e8f0;
+            overflow-x: hidden
+        }
+
+        .grid-bg {
+            background-image: linear-gradient(to right, rgba(0, 242, 254, .03) 1px, transparent 1px), linear-gradient(to bottom, rgba(0, 242, 254, .03) 1px, transparent 1px);
+            background-size: 40px 40px
+        }
+
+        .glass-panel {
+            background: rgba(10, 17, 32, .75);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid rgba(0, 242, 254, .15);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, .5)
+        }
+
+        .glass-panel-hover {
+            transition: all .3s
+        }
+
+        .glass-panel-hover:hover {
+            border-color: rgba(0, 242, 254, .4);
+            box-shadow: 0 0 25px rgba(0, 242, 254, .2);
+            transform: translateY(-2px)
+        }
+
+        .fire-glow {
+            border-color: rgba(255, 59, 48, .4) !important;
+            box-shadow: 0 0 25px rgba(255, 59, 48, .25) !important
+        }
+
+        .flood-glow {
+            border-color: rgba(0, 122, 255, .4) !important;
+            box-shadow: 0 0 25px rgba(0, 122, 255, .25) !important
+        }
+
+        ::-webkit-scrollbar {
+            width: 6px
+        }
+
+        ::-webkit-scrollbar-track {
+            background: #060913
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: #1e293b;
+            border-radius: 3px
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: #00f2fe
+        }
+
+        .corner-accents {
+            position: relative
+        }
+
+        .corner-accents::before {
+            content: '';
+            position: absolute;
+            top: -1px;
+            left: -1px;
+            width: 8px;
+            height: 8px;
+            border-top: 2px solid #00f2fe;
+            border-left: 2px solid #00f2fe
+        }
+
+        .corner-accents::after {
+            content: '';
+            position: absolute;
+            bottom: -1px;
+            right: -1px;
+            width: 8px;
+            height: 8px;
+            border-bottom: 2px solid #00f2fe;
+            border-right: 2px solid #00f2fe
+        }
+
+        .tag {
+            font-size: 12px;
+            font-family: monospace;
+            letter-spacing: .1em;
+            text-transform: uppercase;
+            padding: 4px 12px;
+            border-radius: 4px
+        }
+
+        select option {
+            background: #0f172a;
+            color: #fff
+        }
+    </style>
+</head>
+
+<body class="grid-bg font-sans min-h-screen selection:bg-brand-cyan selection:text-black">
+    <canvas id="orbitCanvas" class="fixed top-0 left-0 w-full h-full pointer-events-none z-0 opacity-40"></canvas>
+
+    <!-- HEADER -->
+    <header class="sticky top-0 z-40 glass-panel border-b border-brand-cyan/20">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex items-center justify-between h-20">
+            <div class="flex items-center space-x-3 cursor-pointer"
+                onclick="window.scrollTo({top:0,behavior:'smooth'})">
+                <div
+                    class="relative w-10 h-10 rounded-lg bg-brand-cyan/10 border border-brand-cyan flex items-center justify-center text-brand-cyan">
+                    <i class="fa-solid fa-satellite"></i><span
+                        class="absolute -top-1 -right-1 w-2.5 h-2.5 bg-brand-success rounded-full animate-ping"></span>
+                </div>
+                <div>
+                    <div class="flex items-center space-x-2"><span
+                            class="font-orbitron font-black text-xl tracking-wider text-transparent bg-clip-text bg-gradient-to-r from-brand-cyan via-white to-blue-400">BHARAT
+                            ASTRA</span><span
+                            class="text-[10px] px-1.5 py-0.5 rounded border border-brand-cyan/40 bg-brand-cyan/10 text-brand-cyan font-mono hidden sm:inline-block">v2.4
+                            SIM</span></div>
+                    <p class="text-[10px] font-mono text-slate-400 tracking-wider">AEROSPACE AI DISASTER ALERT SYSTEM
+                    </p>
+                </div>
+            </div>
+            <div
+                class="hidden lg:flex items-center space-x-6 px-4 py-1.5 rounded-full bg-slate-900/80 border border-slate-800 text-xs font-mono">
+                <span class="text-slate-300">SYSTEM: <span
+                        class="text-brand-success font-bold">ONLINE</span></span><span class="text-slate-700">|</span>
+                <span class="text-slate-300">FIRE: <span class="text-brand-fireOrange font-bold">ACTIVE
+                        SCAN</span></span><span class="text-slate-700">|</span>
+                <span class="text-slate-300">FLOOD: <span class="text-brand-cyan font-bold">ACTIVE SCAN</span></span>
+            </div>
+            <nav
+                class="hidden xl:flex items-center space-x-6 text-xs font-mono font-semibold tracking-wider text-slate-300">
+                <a href="#overview" class="hover:text-brand-cyan">OVERVIEW</a><a href="#problem"
+                    class="hover:text-brand-cyan">PROBLEM</a><a href="#solution"
+                    class="hover:text-brand-cyan">SOLUTION</a><a href="#dashboard" class="text-brand-cyan">MISSION
+                    CONTROL</a><a href="#prototype" class="hover:text-brand-cyan">PROTOTYPE</a><a href="#alerts"
+                    class="hover:text-brand-cyan">ALERTS</a><a href="#team" class="hover:text-brand-cyan">TEAM</a>
+            </nav>
+            <div class="flex items-center space-x-2 shrink-0">
+                <button id="mobileMenuBtn" onclick="toggleMobileMenu()" aria-label="Menu" aria-expanded="false"
+                    class="xl:hidden p-2 rounded-lg bg-slate-800/80 border border-slate-700 text-slate-300"><i
+                        class="fa-solid fa-bars"></i></button>
+                <button onclick="openAccountModal()" aria-label="Account"
+                    class="px-3 sm:px-4 py-2 rounded-lg bg-slate-800 hover:bg-slate-700 border border-slate-600 text-white font-orbitron text-xs font-semibold"><i
+                        class="fa-solid fa-user sm:mr-1.5"></i><span class="hidden sm:inline"
+                        id="userBtnLabel">ACCOUNT</span></button>
+            </div>
+        </div>
+        <div id="mobileMenu"
+            class="hidden xl:hidden border-t border-slate-800 bg-slate-950/95 px-4 py-4 space-y-3 font-mono text-sm">
+            <a href="#overview" onclick="toggleMobileMenu()" class="block">OVERVIEW</a><a href="#problem"
+                onclick="toggleMobileMenu()" class="block">PROBLEM</a><a href="#solution" onclick="toggleMobileMenu()"
+                class="block">SOLUTION</a><a href="#dashboard" onclick="toggleMobileMenu()"
+                class="block text-brand-cyan font-bold">MISSION CONTROL</a><a href="#prototype"
+                onclick="toggleMobileMenu()" class="block">PROTOTYPE</a><a href="#alerts" onclick="toggleMobileMenu()"
+                class="block">ALERTS</a><a href="#team" onclick="toggleMobileMenu()" class="block">TEAM</a>
+        </div>
+    </header>
+
+    <div id="homepageEmergencyBanner"
+        class="relative z-30 bg-slate-900/90 border-b border-brand-cyan/20 py-2.5 px-4 text-center text-xs font-mono">
+        <div class="max-w-7xl mx-auto flex items-center justify-center space-x-3">
+            <span id="bannerStatusDot" class="w-2.5 h-2.5 rounded-full bg-brand-success animate-ping"></span>
+            <span id="bannerText" class="text-slate-300">STATUS: <span
+                    class="text-brand-success font-bold tracking-wider">NO ACTIVE MAJOR EMERGENCIES
+                    REPORTED</span></span>
+            <button id="bannerActionBtn" onclick="scrollToSection('dashboard')"
+                class="hidden px-2.5 py-0.5 rounded bg-brand-cyan/20 border border-brand-cyan text-brand-cyan text-[11px] font-bold">VIEW
+                DASHBOARD</button>
+        </div>
+    </div>
+
+    <main class="relative z-10">
+        <!-- HERO -->
+        <section id="overview" class="pt-12 pb-20 md:py-24 border-b border-slate-800/80">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 grid grid-cols-1 lg:grid-cols-12 gap-12 items-center">
+                <div class="lg:col-span-7 space-y-6 text-center lg:text-left">
+                    <div class="tag inline-block bg-brand-cyan/10 border border-brand-cyan/30 text-brand-cyan"><i
+                            class="fa-solid fa-atom animate-spin-slow"></i> Satellite-Inspired Emergency Awareness
+                        System</div>
+                    <h1 class="text-4xl sm:text-6xl font-orbitron font-black text-white leading-tight">BHARAT <span
+                            class="text-transparent bg-clip-text bg-gradient-to-r from-brand-cyan via-cyan-200 to-blue-500">ASTRA</span>
+                    </h1>
+                    <p class="text-lg sm:text-2xl font-rajdhani font-bold tracking-wider text-slate-300">"AI-Powered
+                        Satellite Fire & Flood Detection and Emergency Awareness System"</p>
+                    <p class="text-xl sm:text-2xl font-orbitron font-bold text-brand-cyan italic">"Observe. Detect.
+                        Alert. Protect."</p>
+                    <p class="text-slate-400 text-sm sm:text-base leading-relaxed max-w-2xl mx-auto lg:mx-0">BHARAT
+                        ASTRA bridges satellite-inspired overhead tracking with environmental IoT sensing. Designed
+                        around a dynamic moving satellite platform operating over miniature urban and coastal zones, the
+                        system analyzes real-time sensor streams to rapidly trigger life-saving early emergency alerts.
+                    </p>
+                    <div
+                        class="pt-4 flex flex-col sm:flex-row items-center justify-center lg:justify-start gap-4 font-orbitron text-xs font-bold">
+                        <button onclick="scrollToSection('dashboard')"
+                            class="w-full sm:w-auto px-8 py-4 rounded-xl bg-gradient-to-r from-brand-cyan to-blue-600 text-slate-950 shadow-[0_0_25px_rgba(0,242,254,.4)]"><i
+                                class="fa-solid fa-rocket"></i> EXPLORE BHARAT ASTRA</button>
+                        <button onclick="triggerDemoSimulation('FIRE')"
+                            class="w-full sm:w-auto px-6 py-4 rounded-xl bg-slate-900 border border-brand-fire/50 text-brand-fire hover:bg-brand-fire hover:text-white"><i
+                                class="fa-solid fa-triangle-exclamation"></i> LAUNCH SIMULATION DEMO</button>
+                    </div>
+                    <div class="pt-6 grid grid-cols-3 gap-4 border-t border-slate-800 text-left font-mono">
+                        <div><span class="text-xs text-slate-500 block">TARGET DETECT</span><span
+                                class="font-bold text-white font-orbitron">FIRE / FLOOD</span></div>
+                        <div><span class="text-xs text-slate-500 block">HARDWARE BASE</span><span
+                                class="font-bold text-brand-cyan font-orbitron">ESP32 / ARDUINO</span></div>
+                        <div><span class="text-xs text-slate-500 block">SCAN VELOCITY</span><span
+                                class="font-bold text-emerald-400 font-orbitron">REAL-TIME</span></div>
+                    </div>
+                </div>
+                <div class="lg:col-span-5 flex justify-center">
+                    <div
+                        class="relative w-full max-w-md aspect-square rounded-2xl glass-panel p-6 corner-accents flex items-center justify-center overflow-hidden">
+                        <div
+                            class="relative w-64 h-64 border border-brand-cyan/20 rounded-full flex items-center justify-center animate-spin-slow">
+                            <div class="absolute w-48 h-48 border border-dashed border-cyan-500/40 rounded-full"></div>
+                            <div class="absolute w-32 h-32 border border-slate-700 rounded-full"></div>
+                            <div
+                                class="absolute -top-3 left-1/2 -translate-x-1/2 w-6 h-6 rounded-full bg-brand-cyan/20 border border-brand-cyan flex items-center justify-center text-brand-cyan text-[10px]">
+                                <i class="fa-solid fa-satellite"></i></div>
+                        </div>
+                        <div
+                            class="absolute inset-x-4 bottom-4 p-3 rounded-lg bg-slate-950/90 border border-brand-cyan/30 text-xs font-mono space-y-1">
+                            <div class="flex justify-between text-slate-400"><span>SAT_ID: BHARAT-ASTRA-01</span><span
+                                    class="text-brand-cyan">ORBIT: NOMINAL</span></div>
+                            <div class="flex justify-between text-slate-300 font-bold"><span>SMOKE SENSOR: <span
+                                        id="heroSmokeReadout"
+                                        class="text-emerald-400">CLEAR</span></span><span>ULTRASONIC: <span
+                                        id="heroUltrasonicReadout" class="text-emerald-400">NORMAL</span></span></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- PROBLEM -->
+        <section id="problem" class="py-20 border-b border-slate-800/80 bg-slate-950/40">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                <div class="text-center max-w-3xl mx-auto space-y-4">
+                    <span
+                        class="tag bg-brand-fireOrange/10 border border-brand-fireOrange/30 text-brand-fireOrange">DISASTER
+                        REALITY</span>
+                    <h2 class="text-3xl sm:text-5xl font-orbitron font-extrabold text-white">"WHEN DISASTERS STRIKE,
+                        EVERY MOMENT MATTERS."</h2>
+                    <p class="text-slate-400">Rapid environmental changes require instant detection and automated
+                        communication. Early physical sensing combined with direct alert generation gives communities
+                        and response teams vital lead-time.</p>
+                    <p class="text-xs font-mono text-slate-500 italic">* BHARAT ASTRA is designed for environmental
+                        monitoring and immediate sensor-condition alerts. It does not claim guaranteed disaster
+                        prediction.</p>
+                </div>
+                <div id="problemCards" class="grid grid-cols-1 md:grid-cols-2 gap-8 mt-14"></div>
+            </div>
+        </section>
+
+        <!-- SOLUTION -->
+        <section id="solution" class="py-20 border-b border-slate-800/80">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                <div class="text-center max-w-3xl mx-auto space-y-4">
+                    <span class="tag bg-brand-cyan/10 border border-brand-cyan/30 text-brand-cyan">SYSTEM
+                        ARCHITECTURE</span>
+                    <h2 class="text-3xl sm:text-5xl font-orbitron font-extrabold text-white">MEET BHARAT ASTRA</h2>
+                    <p class="text-slate-300 font-rajdhani text-lg">"BHARAT ASTRA combines a moving satellite-inspired
+                        platform, environmental sensors, microcontroller processing and an emergency alert interface."
+                    </p>
+                </div>
+                <div class="mt-16 glass-panel p-6 sm:p-10 rounded-2xl">
+                    <h3 class="text-center font-orbitron text-sm font-bold text-brand-cyan tracking-widest mb-8">SYSTEM
+                        PROCESSING DATAFLOW</h3>
+                    <div id="flowSteps" class="grid grid-cols-1 md:grid-cols-6 gap-4 text-center font-mono"></div>
+                </div>
+            </div>
+        </section>
+
+        <!-- DETECTION -->
+        <section class="py-20 border-b border-slate-800/80 bg-slate-950/60">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-16">
+                <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 items-center">
+                    <div class="lg:col-span-6 space-y-4">
+                        <div class="tag inline-block text-brand-fire bg-brand-fire/10 border border-brand-fire/30"><i
+                                class="fa-solid fa-smog"></i> SMOKE DETECTION MODULE</div>
+                        <h3 class="text-3xl font-orbitron font-extrabold text-white">FIRE DETECTION</h3>
+                        <p class="text-slate-300 font-rajdhani text-lg">"The prototype uses smoke and flame sensors to
+                            detect fire in the designated demonstration area."</p>
+                        <div
+                            class="p-4 rounded-xl bg-slate-900/90 border border-slate-800 text-xs font-mono text-slate-400 space-y-2">
+                            <div class="text-white font-bold">FLOW: <span class="text-brand-fire">SMOKE / FLAME → SENSOR
+                                    → ESP32 → CONDITION CHECK → FIRE ALERT</span></div>
+                            <p>When a hazard is detected, the controller checks the sensor condition, sounds the buzzer
+                                and sends the alert online.</p>
+                        </div>
+                    </div>
+                    <div class="lg:col-span-6">
+                        <div class="glass-panel p-6 rounded-2xl border-l-4 border-l-brand-fire space-y-4 relative">
+                            <span
+                                class="absolute top-4 right-4 text-[10px] font-mono px-2 py-0.5 rounded bg-amber-500/20 text-amber-300 border border-amber-500/40 font-bold">DEMO
+                                DATA</span>
+                            <h4 class="font-orbitron text-sm text-slate-300">FIRE MONITORING READOUT</h4>
+                            <div class="grid grid-cols-2 gap-4 font-mono">
+                                <div class="bg-slate-900/80 p-4 rounded-xl border border-slate-800"><span
+                                        class="text-xs text-slate-400 block">SMOKE SENSOR</span><span
+                                        class="text-3xl font-orbitron font-bold text-brand-fire">DETECTED</span></div>
+                                <div class="bg-slate-900/80 p-4 rounded-xl border border-slate-800"><span
+                                        class="text-xs text-slate-400 block">SYSTEM STATUS</span><span
+                                        class="text-lg font-orbitron font-bold text-brand-fire animate-pulse">FIRE
+                                        ALERT</span><span class="text-[10px] text-slate-400 block">Buzzer Active</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 items-center">
+                    <div class="lg:col-span-6 order-2 lg:order-1">
+                        <div class="glass-panel p-6 rounded-2xl border-l-4 border-l-brand-flood space-y-4 relative">
+                            <span
+                                class="absolute top-4 right-4 text-[10px] font-mono px-2 py-0.5 rounded bg-blue-500/20 text-blue-300 border border-blue-500/40 font-bold">PROTOTYPE
+                                SIMULATION</span>
+                            <h4 class="font-orbitron text-sm text-slate-300">FLOOD MONITORING READOUT</h4>
+                            <div class="grid grid-cols-2 gap-4 font-mono">
+                                <div class="bg-slate-900/80 p-4 rounded-xl border border-slate-800"><span
+                                        class="text-xs text-slate-400 block">ULTRASONIC SENSOR</span><span
+                                        class="text-2xl font-orbitron font-bold text-brand-flood">NEAR</span></div>
+                                <div class="bg-slate-900/80 p-4 rounded-xl border border-slate-800"><span
+                                        class="text-xs text-slate-400 block">SYSTEM STATUS</span><span
+                                        class="text-2xl font-orbitron font-bold text-brand-cyan">FLOOD ALERT</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="lg:col-span-6 space-y-4 order-1 lg:order-2">
+                        <div class="tag inline-block text-brand-flood bg-brand-flood/10 border border-brand-flood/30"><i
+                                class="fa-solid fa-water"></i> HYDROMETRIC ANALYSIS MODULE</div>
+                        <h3 class="text-3xl font-orbitron font-extrabold text-white">FLOOD DETECTION</h3>
+                        <p class="text-slate-300 font-rajdhani text-lg">"The prototype uses an ultrasonic sensor to
+                            monitor the distance to water in the flood demonstration area."</p>
+                        <div
+                            class="p-4 rounded-xl bg-slate-900/90 border border-slate-800 text-xs font-mono text-slate-400">
+                            <div class="text-white font-bold">FLOW: <span class="text-brand-flood">WATER DISTANCE →
+                                    ULTRASONIC → CONTROLLER → FLOOD ALERT</span></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- DASHBOARD -->
+        <section id="dashboard" class="py-20 border-b border-slate-800/80">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                <div class="mb-8"><span
+                        class="tag inline-block bg-brand-cyan/10 border border-brand-cyan/30 text-brand-cyan"><i
+                            class="fa-solid fa-gamepad"></i> INTERACTIVE CONSOLE</span>
+                    <h2 class="text-3xl sm:text-5xl font-orbitron font-black text-white mt-2">BHARAT ASTRA MISSION
+                        CONTROL</h2>
+                </div>
+                <div class="glass-panel rounded-2xl border border-brand-cyan/30 p-6 sm:p-8 space-y-8 corner-accents">
+                    <div
+                        class="grid grid-cols-2 md:grid-cols-4 gap-4 bg-slate-950/80 p-4 rounded-xl border border-slate-800 text-xs font-mono">
+                        <div><span class="text-slate-500 block">SYSTEM STATUS</span><span
+                                class="font-orbitron text-sm font-bold text-brand-success">● ONLINE</span></div>
+                        <div><span class="text-slate-500 block">SATELLITE BEACON</span><span
+                                class="font-orbitron text-sm font-bold text-brand-cyan"><i
+                                    class="fa-solid fa-arrows-spin animate-spin text-xs"></i> SCANNING</span></div>
+                        <div><span class="text-slate-500 block">FIRE THREAT LEVEL</span><span id="dashFireStatus"
+                                class="font-orbitron text-sm font-bold text-emerald-400 block">NORMAL</span></div>
+                        <div><span class="text-slate-500 block">FLOOD THREAT LEVEL</span><span id="dashFloodStatus"
+                                class="font-orbitron text-sm font-bold text-emerald-400 block">NORMAL</span></div>
+                    </div>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6 font-mono">
+                        <div class="bg-slate-950/70 p-5 rounded-xl border border-slate-800">
+                            <div class="text-slate-300 font-bold text-xs"><i
+                                    class="fa-solid fa-smog text-brand-fire"></i> SMOKE & FLAME SENSORS</div>
+                            <p class="text-slate-400 text-xs mt-3">Installed in the fire demonstration setup to provide
+                                a hazard alert.</p>
+                        </div>
+                        <div class="bg-slate-950/70 p-5 rounded-xl border border-slate-800">
+                            <div class="text-slate-300 font-bold text-xs"><i
+                                    class="fa-solid fa-ruler-vertical text-brand-flood"></i> ULTRASONIC SENSOR</div>
+                            <p class="text-slate-400 text-xs mt-3">Installed in the flood demonstration setup to measure
+                                distance to the water surface.</p>
+                        </div>
+                    </div>
+                    <div class="pt-4 border-t border-slate-800/80 space-y-4">
+                        <div class="text-center font-orbitron text-xs font-bold text-slate-400">SIMULATION TRIGGER
+                            CONSOLE</div>
+                        <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 font-orbitron text-xs font-bold">
+                            <button onclick="triggerDemoSimulation('FIRE')"
+                                class="py-3.5 rounded-xl bg-gradient-to-r from-red-600 to-amber-600 text-white"><i
+                                    class="fa-solid fa-fire"></i> TRIGGER FIRE HAZARD</button>
+                            <button onclick="triggerDemoSimulation('FLOOD')"
+                                class="py-3.5 rounded-xl bg-gradient-to-r from-blue-600 to-cyan-600 text-white"><i
+                                    class="fa-solid fa-water"></i> TRIGGER FLOOD HAZARD</button>
+                            <button onclick="triggerDemoSimulation('NORMAL')"
+                                class="py-3.5 rounded-xl bg-slate-800 text-slate-200 border border-slate-600"><i
+                                    class="fa-solid fa-rotate"></i> RESET TO NOMINAL</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ALERTS -->
+        <section id="alerts" class="py-20 border-b border-slate-800/80 bg-slate-950/40">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-12">
+                <div class="text-center max-w-3xl mx-auto space-y-3">
+                    <span class="tag bg-brand-fire/10 border border-brand-fire/30 text-brand-fire">NOTIFICATION
+                        ENGINE</span>
+                    <h2 class="text-3xl sm:text-5xl font-orbitron font-black text-white">EMERGENCY ALERT FEED</h2>
+                    <p class="text-slate-400 text-sm">Real-time location-aware warnings and disaster intelligence
+                        broadcast interface.</p>
+                </div>
+                <div class="glass-panel p-6 rounded-2xl space-y-4">
+                    <div class="flex items-center justify-between flex-wrap gap-2">
+                        <h3 class="font-orbitron font-bold text-lg text-white"><i
+                                class="fa-solid fa-location-dot text-brand-cyan"></i> ALERTS NEAR YOU</h3>
+                        <span id="savedLocationDisplay"
+                            class="text-xs font-mono text-brand-cyan px-2.5 py-1 rounded bg-brand-cyan/10 border border-brand-cyan/30">LOCATION:
+                            NEW DELHI, INDIA</span>
+                    </div>
+                    <div id="localAlertContainer"
+                        class="p-4 rounded-xl bg-slate-900/80 border border-slate-800 text-sm font-mono flex items-center justify-between text-slate-300">
+                        <div class="flex items-center space-x-3"><span
+                                class="w-3 h-3 rounded-full bg-emerald-400"></span><span>NO ACTIVE EMERGENCY REPORTED
+                                NEAR YOUR SAVED LOCATION.</span></div>
+                        <button onclick="openAccountModal()" class="text-xs text-brand-cyan hover:underline">CHANGE
+                            PREFERENCES</button>
+                    </div>
+                </div>
+                <div class="space-y-4">
+                    <h3 class="font-orbitron font-bold text-xl text-white"><i
+                            class="fa-solid fa-globe text-brand-cyan"></i> GLOBAL EMERGENCY FEED</h3>
+                    <div id="globalFeedList" class="space-y-3 font-mono"></div>
+                </div>
+            </div>
+        </section>
+
+        <!-- PROTOTYPE -->
+        <section id="prototype" class="py-20 border-b border-slate-800/80">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-8">
+                <div class="flex flex-col md:flex-row md:items-end justify-between gap-4">
+                    <div><span class="tag bg-brand-cyan/10 border border-brand-cyan/30 text-brand-cyan">HARDWARE
+                            DOCUMENTATION</span>
+                        <h2 class="text-3xl sm:text-5xl font-orbitron font-black text-white mt-2">OUR PROTOTYPE</h2>
+                        <p class="text-slate-400 font-rajdhani text-xl">"From concept to working hardware."</p>
+                    </div>
+                    <label
+                        class="cursor-pointer px-5 py-3 rounded-xl bg-gradient-to-r from-brand-cyan to-blue-600 text-slate-950 font-orbitron text-xs font-bold inline-flex items-center gap-2"><i
+                            class="fa-solid fa-cloud-arrow-up"></i> UPLOAD OUR MAIN PROTOTYPE PHOTO<input type="file"
+                            accept="image/*" class="hidden" onchange="handleImageUpload(event,'main')"></label>
+                </div>
+                <div class="glass-panel p-4 rounded-2xl border border-brand-cyan/30 group">
+                    <div
+                        class="relative w-full h-80 sm:h-96 rounded-xl bg-slate-950 border-2 border-dashed border-slate-800 overflow-hidden">
+                        <img id="img-main"
+                            src="https://placehold.co/1200x600/0a1120/00f2fe?text=BHARAT+ASTRA+PHYSICAL+PROTOTYPE+PHOTO"
+                            alt="Prototype" class="w-full h-full object-cover">
+                        <div
+                            class="absolute inset-0 bg-slate-950/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-3">
+                            <button onclick="openLightbox('main')"
+                                class="p-3 rounded-xl bg-slate-900/90 text-brand-cyan border border-brand-cyan"><i
+                                    class="fa-solid fa-expand"></i></button>
+                            <label
+                                class="cursor-pointer p-3 rounded-xl bg-slate-900/90 text-white border border-slate-700"><i
+                                    class="fa-solid fa-pen"></i> REPLACE<input type="file" accept="image/*"
+                                    class="hidden" onchange="handleImageUpload(event,'main')"></label>
+                        </div>
+                    </div>
+                    <div class="mt-4 flex justify-between items-center text-xs font-mono gap-2">
+                        <div><span class="text-brand-cyan font-bold block" id="cap-main">PRIMARY HARDWARE PLATFORM:
+                                Satellite Track & City Grid</span><span class="text-slate-500">Actual Physical
+                                Demonstration Assembly</span></div>
+                        <button onclick="editCaption('main')"
+                            class="text-slate-400 hover:text-brand-cyan underline text-[11px]"><i
+                                class="fa-solid fa-pen-to-square"></i> Edit Caption</button>
+                    </div>
+                </div>
+                <div id="galleryGrid" class="grid grid-cols-1 md:grid-cols-3 gap-6"></div>
+            </div>
+        </section>
+
+        <!-- AI + HARDWARE -->
+        <section class="py-20 border-b border-slate-800/80 bg-slate-950/50">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-16">
+                <div class="text-center max-w-3xl mx-auto space-y-4">
+                    <span class="tag bg-cyan-400/10 border border-cyan-400/30 text-cyan-400">MACHINE INTELLIGENCE</span>
+                    <h2 class="text-3xl sm:text-5xl font-orbitron font-black text-white">FROM SENSOR DATA TO
+                        INTELLIGENCE</h2>
+                    <div
+                        class="p-4 rounded-xl bg-slate-900/90 border border-slate-800 text-xs font-mono text-slate-300">
+                        SENSOR DATA → DATA PROCESSING → AI / ML (PLANNED) → PATTERN CLASSIFICATION → ALERT</div>
+                    <p class="text-xs font-mono text-slate-400 italic">* Current implementation: microcontroller with
+                        smoke, flame and ultrasonic sensors. AI/ML detection is a planned future enhancement. The Astra
+                        chat assistant answers safety questions only.</p>
+                </div>
+                <div class="space-y-6">
+                    <h3 class="font-orbitron font-bold text-xl text-white text-center">SYSTEM HARDWARE & COMPONENTS</h3>
+                    <div id="hwGrid" class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4 font-mono text-xs">
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- TEAM -->
+        <section id="team" class="py-20 border-b border-slate-800/80">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-12">
+                <div class="text-center space-y-3"><span
+                        class="tag bg-brand-cyan/10 border border-brand-cyan/30 text-brand-cyan">INNOVATORS</span>
+                    <h2 class="text-3xl sm:text-5xl font-orbitron font-black text-white">TEAM HORIZON</h2>
+                </div>
+                <div id="teamGrid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-6"></div>
+            </div>
+        </section>
+
+        <!-- ROADMAP -->
+        <section class="py-20 border-b border-slate-800/80 bg-slate-950/40">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-12">
+                <div class="text-center space-y-3"><span
+                        class="tag bg-brand-cyan/10 border border-brand-cyan/30 text-brand-cyan">ROADMAP</span>
+                    <h2 class="text-3xl sm:text-5xl font-orbitron font-black text-white">FROM PROTOTYPE TO CONNECTED
+                        SAFETY</h2>
+                </div>
+                <div id="roadmapGrid" class="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-6 gap-4 font-mono text-xs">
+                </div>
+            </div>
+        </section>
+
+        <!-- CTA -->
+        <section class="py-24 text-center border-b border-slate-800">
+            <div class="max-w-4xl mx-auto px-4 space-y-6">
+                <h2 class="text-4xl sm:text-6xl font-orbitron font-black text-white">BHARAT ASTRA</h2>
+                <p class="text-2xl font-orbitron font-bold text-brand-cyan">"Observe. Detect. Alert. Protect."</p>
+                <p class="text-slate-300 font-rajdhani text-xl">"Technology for a more informed and prepared tomorrow."
+                </p>
+                <div class="pt-6 flex flex-col sm:flex-row justify-center gap-4 font-orbitron text-xs font-bold">
+                    <button onclick="scrollToSection('dashboard')"
+                        class="px-8 py-4 rounded-xl bg-gradient-to-r from-brand-cyan to-blue-600 text-slate-950">EXPLORE
+                        BHARAT ASTRA</button>
+                    <button onclick="openAccountModal()"
+                        class="px-8 py-4 rounded-xl bg-slate-900 border border-slate-700 text-white">CREATE AN
+                        ACCOUNT</button>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <footer class="bg-slate-950 text-slate-400 font-mono text-xs py-12 border-t border-slate-900">
+        <div class="max-w-7xl mx-auto px-4 grid grid-cols-1 md:grid-cols-3 gap-8">
+            <div class="space-y-2">
+                <div class="text-white font-orbitron font-bold text-lg"><i
+                        class="fa-solid fa-satellite text-brand-cyan"></i> BHARAT ASTRA</div>
+                <p class="text-slate-500">AI-Powered Satellite Fire & Flood Detection System</p>
+                <p class="text-[10px] text-brand-cyan">Bharat Innovation Challenge 2026–2027</p>
+            </div>
+            <div>
+                <h4 class="font-orbitron font-bold text-white mb-3 text-sm">NAVIGATION</h4>
+                <ul class="space-y-2">
+                    <li><a href="#overview" class="hover:text-brand-cyan">Overview</a></li>
+                    <li><a href="#dashboard" class="hover:text-brand-cyan">Live Dashboard</a></li>
+                    <li><a href="#alerts" class="hover:text-brand-cyan">Emergency Alerts</a></li>
+                    <li><a href="#team" class="hover:text-brand-cyan">Team</a></li>
+                </ul>
+            </div>
+            <div>
+                <h4 class="font-orbitron font-bold text-white mb-3 text-sm">SYSTEM STATUS</h4>
+                <div class="p-3 rounded-lg bg-slate-900 border border-slate-800 text-emerald-400 font-bold">MAINFRAME:
+                    ONLINE</div>
+            </div>
+        </div>
+        <div class="max-w-7xl mx-auto px-4 mt-8 pt-6 border-t border-slate-900 text-center text-slate-600">&copy;
+            2026–2027 Team Horizon. All rights reserved.</div>
+    </footer>
+
+    <!-- EMERGENCY MODAL -->
+    <div id="emergencyModal"
+        class="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-md hidden flex items-center justify-center p-4">
+        <div id="emergencyModalCard"
+            class="w-full max-w-lg glass-panel p-6 sm:p-8 rounded-2xl border-2 space-y-6 relative">
+            <div class="flex justify-between items-start">
+                <div class="flex items-center space-x-3">
+                    <div id="emergencyModalIcon" class="w-12 h-12 rounded-xl flex items-center justify-center text-2xl">
+                        <i class="fa-solid fa-triangle-exclamation"></i></div>
+                    <div><span
+                            class="text-[10px] font-mono font-bold tracking-widest px-2 py-0.5 rounded bg-white/10">EMERGENCY
+                            DETECTED</span>
+                        <h3 id="emergencyModalTitle" class="font-orbitron font-black text-2xl text-white">FIRE ALERT
+                        </h3>
+                    </div>
+                </div>
+                <button onclick="closeEmergencyModal()" class="text-slate-400 hover:text-white text-xl"><i
+                        class="fa-solid fa-xmark"></i></button>
+            </div>
+            <div class="space-y-3 font-mono text-xs border-y border-slate-800 py-4">
+                <div class="flex justify-between gap-4"><span class="text-slate-400">LOCATION:</span><span
+                        id="emergencyModalLoc" class="text-white font-bold text-right">MINIATURE DEMO CITY - ZONE
+                        A</span></div>
+                <div class="flex justify-between"><span class="text-slate-400">TIME DETECTED:</span><span
+                        id="emergencyModalTime" class="text-white font-bold">--</span></div>
+                <div class="flex justify-between"><span class="text-slate-400">STATUS:</span><span
+                        class="text-red-400 font-bold animate-pulse">ACTIVE HAZARD</span></div>
+                <div id="emergencyModalDesc" class="p-3 rounded-lg bg-slate-900 text-slate-300 text-[11px]">"An
+                    emergency condition has been detected in this demonstration."</div>
+            </div>
+            <div
+                class="space-y-1 text-[11px] font-mono text-slate-400 bg-slate-950 p-3 rounded-lg border border-slate-800">
+                <div class="text-white font-bold mb-1">SAFETY INSTRUCTIONS:</div>
+                <p>• Follow instructions from official emergency authorities.</p>
+                <p>• Avoid entering affected areas.</p>
+                <p>• Verify important emergency information through official sources.</p>
+            </div>
+            <div class="flex space-x-3 font-orbitron text-xs font-bold">
+                <button onclick="openShareModal()" class="flex-1 py-3 rounded-xl bg-slate-800 text-white"><i
+                        class="fa-solid fa-share-nodes"></i> SHARE ALERT</button>
+                <button onclick="closeEmergencyModal()"
+                    class="flex-1 py-3 rounded-xl bg-brand-cyan text-slate-950">CLOSE</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ACCOUNT MODAL -->
+    <div id="accountModal"
+        class="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-md hidden flex items-center justify-center p-4">
+        <div
+            class="w-full max-w-md max-h-[90vh] overflow-y-auto glass-panel p-6 sm:p-8 rounded-2xl border border-brand-cyan/30 space-y-6 corner-accents">
+            <div class="flex justify-between items-center border-b border-slate-800 pb-4">
+                <h3 class="font-orbitron font-bold text-xl text-white"><i
+                        class="fa-solid fa-user-shield text-brand-cyan"></i> USER PREFERENCES</h3><button
+                    onclick="closeAccountModal()" class="text-slate-400 hover:text-white"><i
+                        class="fa-solid fa-xmark text-lg"></i></button>
+            </div>
+            <form onsubmit="saveAccountPreferences(event)" class="space-y-4 font-mono text-xs">
+                <div><label class="text-slate-400 block mb-1">FULL NAME</label><input type="text" id="accName" required
+                        placeholder="Ivanka Singh"
+                        class="w-full bg-slate-900 border border-slate-700 rounded-lg p-2.5 text-white focus:border-brand-cyan outline-none">
+                </div>
+                <div><label class="text-slate-400 block mb-1">EMAIL ADDRESS</label><input type="email" id="accEmail"
+                        required placeholder="user@bharatastra.in"
+                        class="w-full bg-slate-900 border border-slate-700 rounded-lg p-2.5 text-white focus:border-brand-cyan outline-none">
+                </div>
+                <div><label class="text-slate-400 block mb-1">COUNTRY</label><select id="accCountry" required
+                        onchange="populateCities()"
+                        class="w-full bg-slate-900 border border-slate-700 rounded-lg p-2.5 text-white focus:border-brand-cyan outline-none"></select>
+                </div>
+                <div><label class="text-slate-400 block mb-1">CITY</label><select id="accCity" required
+                        class="w-full bg-slate-900 border border-slate-700 rounded-lg p-2.5 text-white focus:border-brand-cyan outline-none"></select>
+                </div>
+                <div class="space-y-2 pt-2 border-t border-slate-800"><span
+                        class="text-slate-300 font-bold block mb-1">NOTIFICATION PREFERENCES</span>
+                    <label class="flex items-center space-x-2 text-slate-400"><input type="checkbox" id="prefFire"
+                            checked class="accent-brand-cyan"><span>Fire Alerts</span></label>
+                    <label class="flex items-center space-x-2 text-slate-400"><input type="checkbox" id="prefFlood"
+                            checked class="accent-brand-cyan"><span>Flood Alerts</span></label>
+                    <label class="flex items-center space-x-2 text-slate-400"><input type="checkbox" id="prefMajor"
+                            checked class="accent-brand-cyan"><span>Major Critical Emergencies</span></label>
+                </div>
+                <button type="submit"
+                    class="w-full py-3 rounded-xl bg-brand-cyan text-slate-950 font-orbitron font-bold text-xs">SAVE
+                    ACCOUNT PREFERENCES</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- SHARE MODAL -->
+    <div id="shareModal"
+        class="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-md hidden flex items-center justify-center p-4">
+        <div class="w-full max-w-sm glass-panel p-6 rounded-2xl space-y-4 text-center">
+            <i class="fa-solid fa-share-nodes text-3xl text-brand-cyan"></i>
+            <h3 class="font-orbitron font-bold text-lg text-white">SHARE EMERGENCY ADVISORY</h3>
+            <p class="text-slate-400 font-mono text-xs">Copy informational link to alert communities:</p>
+            <input type="text" readonly id="shareUrlInput"
+                class="w-full bg-slate-900 border border-slate-800 p-2 rounded text-center text-xs font-mono text-brand-cyan">
+            <button onclick="copyShareUrl()"
+                class="w-full py-2.5 rounded-lg bg-brand-cyan text-black font-orbitron font-bold text-xs"><i
+                    class="fa-solid fa-copy"></i> COPY LINK</button>
+            <button onclick="closeShareModal()" class="text-xs text-slate-500 hover:text-white">CLOSE</button>
+        </div>
+    </div>
+
+    <!-- LIGHTBOX -->
+    <div id="lightboxModal"
+        class="fixed inset-0 z-50 bg-slate-950/90 backdrop-blur-md hidden flex flex-col items-center justify-center p-4">
+        <button onclick="closeLightbox()" class="absolute top-6 right-6 text-slate-400 hover:text-white text-3xl"><i
+                class="fa-solid fa-xmark"></i></button>
+        <img id="lightboxImg" src="" alt="Full view"
+            class="max-w-full max-h-[75vh] object-contain rounded-xl border border-brand-cyan/30">
+        <p id="lightboxCaption" class="mt-4 font-mono text-xs text-brand-cyan font-bold text-center"></p>
+    </div>
+
+    <!-- CHATBOT -->
+    <button id="chatBtn" onclick="toggleChat()" aria-label="Open AI assistant"
+        class="fixed bottom-5 right-5 z-40 w-14 h-14 rounded-full bg-gradient-to-r from-brand-cyan to-blue-600 text-slate-950 text-xl shadow-[0_0_20px_rgba(0,242,254,.5)]"><i
+            class="fa-solid fa-robot"></i></button>
+    <div id="chatPanel"
+        class="hidden fixed bottom-24 right-5 z-40 w-[calc(100vw-2.5rem)] max-w-sm h-[28rem] glass-panel rounded-2xl border border-brand-cyan/30 flex flex-col overflow-hidden">
+        <div class="flex items-center justify-between px-4 py-3 border-b border-slate-800 bg-slate-950/80">
+            <div class="font-orbitron text-xs font-bold text-brand-cyan"><i class="fa-solid fa-robot"></i> ASTRA AI
+                ASSISTANT</div><button onclick="toggleChat()" class="text-slate-400 hover:text-white"><i
+                    class="fa-solid fa-xmark"></i></button>
+        </div>
+        <div id="chatLog" class="flex-1 overflow-y-auto p-3 space-y-2 text-xs font-mono"></div>
+        <div class="p-3 border-t border-slate-800 flex gap-2"><input id="chatInput" type="text" maxlength="500"
+                placeholder="Ask about fire safety, floods..." onkeydown="if(event.key==='Enter')sendChat()"
+                class="flex-1 bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-white text-xs outline-none focus:border-brand-cyan"><button
+                onclick="sendChat()" aria-label="Send" class="px-3 rounded-lg bg-brand-cyan text-slate-950"><i
+                    class="fa-solid fa-paper-plane"></i></button></div>
+    </div>
+
+    <script>
+        /* ================= CONFIG ================= */
+        // Paste your Firebase URL (no trailing slash) + /alert.json
+        const FIREBASE_ALERT_URL = "https://bharatastra-154d9-default-rtdb.asia-southeast1.firebasedatabase.app/alert.json";
+
+        /* ================= HELPERS ================= */
+        const $ = id => document.getElementById(id);
+        const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+        let audioEnabled = false;
+        document.addEventListener('click', () => { audioEnabled = true; }, { once: true });
+        function playBeep(freq = 880, dur = 0.2) {
+            if (!audioEnabled) return;
+            try {
+                const c = new (window.AudioContext || window.webkitAudioContext)(), o = c.createOscillator(), g = c.createGain();
+                o.type = 'sawtooth'; o.frequency.value = freq; g.gain.value = 0.1; o.connect(g); g.connect(c.destination); o.start(); o.stop(c.currentTime + dur);
+            } catch (e) { }
+        }
+
+        /* ================= BACKGROUND PARTICLES ================= */
+        const cv = $('orbitCanvas'), cx = cv.getContext('2d');
+        const resize = () => { cv.width = innerWidth; cv.height = innerHeight; }; addEventListener('resize', resize); resize();
+        const pts = Array.from({ length: 60 }, () => ({ x: Math.random() * cv.width, y: Math.random() * cv.height, s: Math.random() * 1.5 + .5, dx: (Math.random() - .5) * .3, dy: (Math.random() - .5) * .3, a: Math.random() * .5 + .2 }));
+        (function loop() {
+            cx.clearRect(0, 0, cv.width, cv.height);
+            pts.forEach(p => { p.x = (p.x + p.dx + cv.width) % cv.width; p.y = (p.y + p.dy + cv.height) % cv.height; cx.fillStyle = `rgba(0,242,254,${p.a})`; cx.beginPath(); cx.arc(p.x, p.y, p.s, 0, 6.283); cx.fill(); });
+            requestAnimationFrame(loop);
+        })();
+
+        /* ================= RENDERED SECTIONS ================= */
+        $('problemCards').innerHTML = [
+            ['fire', 'fa-fire-flame-curved', '01', 'FIRE HAZARD MONITORING', '"Detect smoke and flame conditions and trigger an early warning."', 'Smoke & Flame Sensors', 'Miniature Fire Demo Zone'],
+            ['flood', 'fa-water', '02', 'FLOOD HAZARD MONITORING', '"Monitor changing water distance in the flood demonstration area."', 'Ultrasonic Distance Sensing', 'Miniature Shore Demo Area']
+        ].map(([k, ic, n, t, q, s, z]) => `<div class="glass-panel glass-panel-hover p-8 rounded-2xl border-l-4 border-l-brand-${k}">
+  <div class="flex items-center space-x-4 mb-4"><div class="w-14 h-14 rounded-xl bg-brand-${k}/20 border border-brand-${k} flex items-center justify-center text-brand-${k} text-2xl"><i class="fa-solid ${ic}"></i></div>
+  <div><span class="text-xs font-mono text-brand-${k}">MONITORING TARGET #${n}</span><h3 class="text-2xl font-orbitron font-bold text-white">${t}</h3></div></div>
+  <p class="text-slate-300 font-rajdhani text-lg">${q}</p>
+  <div class="mt-6 pt-4 border-t border-slate-800/80 text-xs font-mono text-slate-400 space-y-2"><div class="flex justify-between"><span>Sensor:</span><span class="text-white">${s}</span></div><div class="flex justify-between"><span>Demo Area:</span><span class="text-white">${z}</span></div></div></div>`).join('');
+
+        $('flowSteps').innerHTML = [
+            ['fa-satellite', 'SATELLITE MOVEMENT', 'Platform moves over miniature city'], ['fa-microchip', 'SENSOR DATA', 'Smoke, flame and distance readings'],
+            ['fa-memory', 'MICROCONTROLLER', 'Local embedded processing'], ['fa-chart-line', 'CONDITION ANALYSIS', 'Check against hazard thresholds'],
+            ['fa-triangle-exclamation', 'FIRE / FLOOD DETECT', 'State classification established'], ['fa-bell', 'EMERGENCY ALERT', 'Dashboard popup & audio']
+        ].map(([ic, t, d], i) => `<div class="p-4 rounded-xl bg-slate-900/80 border ${i == 5 ? 'border-brand-fire/50 bg-brand-fire/10' : 'border-slate-700'} hover:border-brand-cyan transition-all">
+  <div class="w-8 h-8 mx-auto mb-2 rounded-full ${i == 5 ? 'bg-brand-fire text-white' : 'bg-brand-cyan/20 text-brand-cyan'} flex items-center justify-center text-xs font-bold font-orbitron">0${i + 1}</div>
+  <i class="fa-solid ${ic} text-2xl ${i >= 4 ? 'text-brand-fireOrange' : 'text-slate-300'} mb-2"></i><div class="text-xs font-bold text-white">${t}</div><p class="text-[10px] text-slate-400 mt-1">${d}</p></div>`).join('');
+
+        const gallery = { gallery1: ['FIRE+DEMO+AREA', 'ff3b30', 'Fire Demonstration Area & Sensors'], gallery2: ['FLOOD+SHORE+AREA', '007aff', 'Flood Shore Zone & Ultrasonic Sensor'], gallery3: ['MICROCONTROLLER', '34c759', 'ESP32 Controller & Buzzer'] };
+        $('galleryGrid').innerHTML = Object.entries(gallery).map(([k, [txt, col, cap]]) => `<div class="glass-panel p-4 rounded-xl space-y-3 group">
+  <div class="relative h-48 rounded-lg bg-slate-950 overflow-hidden border border-slate-800"><img id="img-${k}" src="https://placehold.co/600x400/0a1120/${col}?text=${txt}" alt="${cap}" class="w-full h-full object-cover">
+  <div class="absolute inset-0 bg-slate-950/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
+   <button onclick="openLightbox('${k}')" class="p-2 rounded-lg bg-slate-900 text-brand-cyan border border-brand-cyan"><i class="fa-solid fa-expand"></i></button>
+   <label class="cursor-pointer p-2 rounded-lg bg-slate-900 text-white border border-slate-700"><i class="fa-solid fa-camera"></i><input type="file" accept="image/*" class="hidden" onchange="handleImageUpload(event,'${k}')"></label></div></div>
+  <div class="text-xs font-mono space-y-1"><div class="text-slate-200 font-bold" id="cap-${k}">${cap}</div><button onclick="editCaption('${k}')" class="text-[10px] text-slate-500 hover:text-brand-cyan underline">Edit Caption</button></div></div>`).join('');
+
+        $('hwGrid').innerHTML = [
+            ['fa-microchip', 'text-brand-cyan', 'MAIN CONTROLLER', 'ESP32 / Arduino'], ['fa-tower-broadcast', 'text-brand-fire', 'SENSORS', 'Smoke, Flame & Ultrasonic'],
+            ['fa-gear', 'text-amber-400', 'MOTION', 'Satellite Track Motor'], ['fa-tv', 'text-blue-400', 'OUTPUT', 'LCD, LEDs & Buzzer'],
+            ['fa-code', 'text-emerald-400', 'PROGRAMMING', 'Arduino IDE'], ['fa-brain', 'text-brand-cyan', 'FUTURE STACK', 'AI/ML & Vision (Planned)']
+        ].map(([ic, c, l, v]) => `<div class="p-4 rounded-xl bg-slate-900/80 border border-slate-800 text-center space-y-2"><i class="fa-solid ${ic} text-2xl ${c}"></i><div class="text-slate-400 text-[10px]">${l}</div><div class="font-bold text-white font-orbitron">${v}</div></div>`).join('');
+
+        $('teamGrid').innerHTML = ['IVANKA SINGH', 'AVYUKT SAXENA', 'MITHRA VINOTHKUMAR', 'AMEERA MACEDA AHMED', 'SOHANA DOSTI'].map(n =>
+            `<div class="glass-panel p-6 rounded-2xl border border-slate-800 hover:border-brand-cyan/50 transition-all text-center group"><h3 class="font-orbitron font-bold text-lg text-white group-hover:text-brand-cyan">${n}</h3><p class="font-mono text-xs text-slate-400 mt-1">CLASS 9 • 2026–2027</p></div>`).join('');
+
+        $('roadmapGrid').innerHTML = [['PHYSICAL PROTOTYPE', 'Current moving platform and sensor validation.'], ['SMART SENSORS', 'Planned sensor expansion beyond the current prototype.'], ['AI DETECTION', 'Planned AI/ML pattern classification.'], ['ALERT NETWORK', 'Mesh cloud node notification relays.'], ['LOCATION AWARE', 'Geofenced browser & push alerts.'], ['LARGE-SCALE', 'Official emergency authority grid integration.']]
+            .map(([t, d], i) => `<div class="p-4 rounded-xl bg-slate-900/80 border ${i == 0 ? 'border-brand-cyan/30' : 'border-slate-800'} text-center space-y-2"><div class="${i == 0 ? 'text-brand-cyan' : 'text-slate-300'} font-bold font-orbitron">0${i + 1}. ${t}</div><p class="text-[11px] text-slate-400">${d}</p></div>`).join('');
+
+        /* ================= DEMO SIMULATION + FEED ================= */
+        const initialFeedItems = [
+            { id: '1', type: 'FIRE', title: 'FIRE DEMO ALERT', location: 'Miniature City Zone A', time: '10 mins ago', status: 'ACTIVE SIMULATION' },
+            { id: '2', type: 'FLOOD', title: 'FLOOD DEMO ALERT', location: 'Shoreline Demonstration Area', time: '25 mins ago', status: 'ACTIVE SIMULATION' },
+            { id: '3', type: 'FIRE', title: 'SMOKE SENSOR TEST', location: 'Satellite Track Section 02', time: '1 hour ago', status: 'RESOLVED' }
+        ];
+        function renderGlobalFeed() {
+            $('globalFeedList').innerHTML = initialFeedItems.map(i => {
+                const f = i.type === 'FIRE';
+                return `<div class="p-4 rounded-xl glass-panel border ${f ? 'border-brand-fire/30' : 'border-brand-flood/30'} flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+    <div class="flex items-center space-x-3"><span class="p-2 rounded-lg ${f ? 'bg-brand-fire/20 text-brand-fire' : 'bg-brand-flood/20 text-brand-flood'}"><i class="fa-solid ${f ? 'fa-fire' : 'fa-water'}"></i></span>
+    <div><div class="text-white font-bold text-sm">${esc(i.title)}</div><div class="text-slate-400 text-xs">${esc(i.location)} • ${esc(i.time)}</div></div></div>
+    <div class="flex items-center space-x-3"><span class="text-[10px] px-2 py-0.5 rounded bg-slate-900 text-slate-300 border border-slate-700">${esc(i.status)}</span><button onclick="openShareModal()" class="text-xs text-brand-cyan hover:underline"><i class="fa-solid fa-share-nodes"></i> Share</button></div></div>`;
+            }).join('');
+        }
+        renderGlobalFeed();
+
+        function setBanner(cls, dot, html) { $('homepageEmergencyBanner').className = 'relative z-30 ' + cls + ' py-2.5 px-4 text-center text-xs font-mono'; $('bannerStatusDot').className = 'w-2.5 h-2.5 rounded-full animate-ping ' + dot; $('bannerText').innerHTML = html; }
+        function triggerDemoSimulation(type) {
+            const ok = '<span class="text-emerald-400">NORMAL</span>';
+            if (type === 'FIRE') {
+                $('dashFireStatus').innerHTML = '<span class="text-brand-fire font-bold animate-pulse">SMOKE ALERT</span>'; $('dashFloodStatus').innerHTML = ok;
+                setBanner('bg-red-950/90 border-b border-brand-fire/50', 'bg-brand-fire', 'STATUS: <span class="text-brand-fire font-bold tracking-wider">ACTIVE FIRE WARNING DETECTED IN DEMO AREA</span>');
+                openEmergencyModal('FIRE', 'FIRE HAZARD DETECTED', 'Miniature Fire Demonstration Area', 'Smoke sensor alert detected. Buzzer triggered.'); playBeep(900, .4);
+            } else if (type === 'FLOOD') {
+                $('dashFireStatus').innerHTML = ok; $('dashFloodStatus').innerHTML = '<span class="text-brand-flood font-bold animate-pulse">FLOOD WARNING (HIGH)</span>';
+                setBanner('bg-blue-950/90 border-b border-brand-flood/50', 'bg-brand-flood', 'STATUS: <span class="text-brand-flood font-bold tracking-wider">ACTIVE FLOOD HAZARD DETECTED IN SHORE DEMO</span>');
+                openEmergencyModal('FLOOD', 'FLOOD HAZARD DETECTED', 'Shore Demonstration Area', 'Ultrasonic water-distance threshold reached. Flood alert active.'); playBeep(600, .4);
+            } else {
+                $('dashFireStatus').innerHTML = ok; $('dashFloodStatus').innerHTML = ok;
+                setBanner('bg-slate-900/90 border-b border-brand-cyan/20', 'bg-brand-success', 'STATUS: <span class="text-brand-success font-bold tracking-wider">NO ACTIVE MAJOR EMERGENCIES REPORTED</span>');
+            }
+        }
+
+        /* ================= MODALS ================= */
+        function openEmergencyModal(type, title, loc, desc) {
+            const fire = type === 'FIRE', t = $('emergencyModalTitle');
+            t.innerText = title; $('emergencyModalLoc').innerText = loc; $('emergencyModalTime').innerText = new Date().toLocaleTimeString() + ' IST';
+            if (desc) $('emergencyModalDesc').innerText = '"' + desc + '"';
+            $('emergencyModalCard').className = `w-full max-w-lg glass-panel p-6 sm:p-8 rounded-2xl border-2 space-y-6 relative ${fire ? 'border-brand-fire fire-glow' : 'border-brand-flood flood-glow'}`;
+            $('emergencyModalIcon').className = `w-12 h-12 rounded-xl flex items-center justify-center text-2xl ${fire ? 'bg-brand-fire/20 text-brand-fire' : 'bg-brand-flood/20 text-brand-flood'}`;
+            t.className = `font-orbitron font-black text-2xl ${fire ? 'text-brand-fire' : 'text-brand-flood'}`;
+            $('emergencyModal').classList.remove('hidden');
+        }
+        const closeEmergencyModal = () => $('emergencyModal').classList.add('hidden');
+        const openAccountModal = () => $('accountModal').classList.remove('hidden');
+        const closeAccountModal = () => $('accountModal').classList.add('hidden');
+        const openShareModal = () => { $('shareUrlInput').value = location.origin + '/#alerts'; $('shareModal').classList.remove('hidden'); };
+        const closeShareModal = () => $('shareModal').classList.add('hidden');
+        function copyShareUrl() { const i = $('shareUrlInput'); i.select(); (navigator.clipboard ? navigator.clipboard.writeText(i.value) : Promise.resolve(document.execCommand('copy'))).then(() => { alert('Emergency Alert Link copied to clipboard!'); closeShareModal(); }); }
+        function toggleMobileMenu() { const m = $('mobileMenu'), h = m.classList.toggle('hidden'); $('mobileMenuBtn').setAttribute('aria-expanded', String(!h)); }
+        function scrollToSection(id) { const e = $(id); if (e) e.scrollIntoView({ behavior: 'smooth' }); }
+
+        /* ================= ACCOUNT: COUNTRY -> CITY DROPDOWNS ================= */
+        const COUNTRY_CITIES = {
+            "India": ["New Delhi", "Mumbai", "Hyderabad", "Bengaluru", "Chennai", "Kolkata", "Pune", "Ahmedabad", "Jaipur", "Lucknow"],
+            "United States": ["New York", "Los Angeles", "Chicago", "Houston", "San Francisco", "Seattle", "Miami", "Boston"],
+            "United Kingdom": ["London", "Manchester", "Birmingham", "Edinburgh", "Glasgow", "Liverpool"],
+            "Canada": ["Toronto", "Vancouver", "Montreal", "Calgary", "Ottawa"],
+            "Australia": ["Sydney", "Melbourne", "Brisbane", "Perth", "Adelaide"],
+            "United Arab Emirates": ["Dubai", "Abu Dhabi", "Sharjah"],
+            "Singapore": ["Singapore"],
+            "Japan": ["Tokyo", "Osaka", "Kyoto", "Yokohama"],
+            "Germany": ["Berlin", "Munich", "Hamburg", "Frankfurt"],
+            "France": ["Paris", "Lyon", "Marseille"],
+            "Bangladesh": ["Dhaka", "Chittagong", "Sylhet"],
+            "Nepal": ["Kathmandu", "Pokhara"],
+            "Sri Lanka": ["Colombo", "Kandy"],
+            "Pakistan": ["Karachi", "Lahore", "Islamabad"],
+            "Indonesia": ["Jakarta", "Surabaya", "Bandung"],
+            "Brazil": ["Sao Paulo", "Rio de Janeiro", "Brasilia"],
+            "South Africa": ["Johannesburg", "Cape Town", "Durban"]
+        };
+        function populateCities() { $('accCity').innerHTML = (COUNTRY_CITIES[$('accCountry').value] || []).map(n => `<option value="${n}">${n}</option>`).join(''); }
+        $('accCountry').innerHTML = Object.keys(COUNTRY_CITIES).map(n => `<option value="${n}">${n}</option>`).join(''); $('accCountry').value = 'India'; populateCities();
+        function saveAccountPreferences(e) {
+            e.preventDefault();
+            const name = $('accName').value, city = $('accCity').value, country = $('accCountry').value;
+            $('savedLocationDisplay').innerText = `LOCATION: ${city.toUpperCase()}, ${country.toUpperCase()}`;
+            $('userBtnLabel').innerText = name.split(' ')[0].toUpperCase();
+            closeAccountModal(); alert(`Account saved for ${name}. Preferred Location: ${city}, ${country}`);
+        }
+
+        /* ================= GALLERY ================= */
+        function handleImageUpload(ev, key) { const f = ev.target.files[0]; if (!f) return; const r = new FileReader(); r.onload = e => { $('img-' + key).src = e.target.result; }; r.readAsDataURL(f); }
+        function editCaption(key) { const c = prompt('Enter custom photo caption:'); if (c) $('cap-' + key).innerText = c; }
+        function openLightbox(key) { $('lightboxImg').src = $('img-' + key).src; $('lightboxCaption').innerText = $('cap-' + key).innerText; $('lightboxModal').classList.remove('hidden'); }
+        const closeLightbox = () => $('lightboxModal').classList.add('hidden');
+
+        /* ================= AI CHATBOT ================= */
+        const chatHistory = [];
+        const FALLBACK = [
+            [/fire|smoke|flame/i, "If you see fire or smoke: get everyone out, stay low, don't use lifts, and call your local emergency number (112 in India). Don't go back inside for belongings."],
+            [/flood|water/i, "In a flood: move to higher ground, avoid walking or driving through floodwater, switch off electricity if it is safe, and follow official instructions."],
+            [/sensor|arduino|esp32|how.*work/i, "Bharat Astra reads smoke, flame and ultrasonic sensors with a microcontroller, compares them to thresholds, then raises an alert with a popup, buzzer and live feed."],
+            [/hello|hi\b|hey/i, "Hi! I'm the Astra assistant. Ask me about fire safety, flood safety, or how this system works."]
+        ];
+        function toggleChat() { const p = $('chatPanel'); p.classList.toggle('hidden'); if (!p.classList.contains('hidden') && !$('chatLog').children.length) addChatMsg("Hi! I'm the Astra AI assistant. Ask me about fire or flood safety, or how Bharat Astra works.", 'bot'); }
+        function addChatMsg(text, who) {
+            const d = document.createElement('div');
+            d.className = who === 'user' ? 'ml-8 p-2 rounded-lg bg-brand-cyan/20 text-white' : 'mr-8 p-2 rounded-lg bg-slate-900 border border-slate-800 text-slate-200';
+            d.textContent = text; $('chatLog').appendChild(d); $('chatLog').scrollTop = $('chatLog').scrollHeight; return d;
+        }
+        async function sendChat() {
+            const inp = $('chatInput'), text = inp.value.trim(); if (!text) return;
+            inp.value = ''; addChatMsg(text, 'user'); chatHistory.push({ role: 'user', content: text });
+            const typing = addChatMsg('...', 'bot'); let reply;
+            try {
+                const res = await fetch('/.netlify/functions/chat', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ messages: chatHistory.slice(-10) }) });
+                if (!res.ok) throw 0; reply = (await res.json()).reply;
+            } catch (e) { const h = FALLBACK.find(([re]) => re.test(text)); reply = h ? h[1] : "I can't reach the AI service right now. For emergencies, call your local emergency number (112 in India)."; }
+            typing.textContent = reply; chatHistory.push({ role: 'assistant', content: reply });
+        }
+
+        /* ================= LIVE ESP32 ALERTS (FIREBASE) ================= */
+        let lastLiveId = null, liveActive = false, liveBeepTimer = null;
+        const localAlertOriginal = $('localAlertContainer').innerHTML;
+        function applyLiveAlert(a) {
+            liveActive = true;
+            $('dashFireStatus').innerHTML = `<span class="text-brand-fire font-bold animate-pulse">${esc(a.type)}</span>`; $('dashFloodStatus').innerHTML = '<span class="text-emerald-400">NORMAL</span>';
+            setBanner('bg-red-950/90 border-b border-brand-fire/50', 'bg-brand-fire', `STATUS: <span class="text-brand-fire font-bold tracking-wider">LIVE ${esc(a.type)} AT ${esc(a.location).toUpperCase()}</span>`);
+            $('bannerActionBtn').classList.remove('hidden');
+            $('heroSmokeReadout').innerText = 'DETECTED'; $('heroSmokeReadout').className = 'text-brand-fire';
+            $('localAlertContainer').innerHTML = `<div class="flex items-center space-x-3"><span class="w-3 h-3 rounded-full bg-brand-fire animate-ping"></span><span class="text-brand-fire font-bold">${esc(a.type)} - ${esc(a.location)} (${esc(a.time)})</span></div>`;
+            initialFeedItems.unshift({ id: String(a.id), type: 'FIRE', title: a.type, location: a.location, time: a.time, status: 'ACTIVE' }); renderGlobalFeed();
+            openEmergencyModal('FIRE', a.type, a.location, 'Live sensor alert from the Bharat Astra ESP32 unit.'); $('emergencyModalTime').innerText = a.time;
+            clearInterval(liveBeepTimer); playBeep(900, .4); liveBeepTimer = setInterval(() => playBeep(900, .4), 2000);
+        }
+        function clearLiveAlert() {
+            if (!liveActive) return; liveActive = false; clearInterval(liveBeepTimer);
+            triggerDemoSimulation('NORMAL'); closeEmergencyModal(); $('bannerActionBtn').classList.add('hidden');
+            $('heroSmokeReadout').innerText = 'CLEAR'; $('heroSmokeReadout').className = 'text-emerald-400';
+            $('localAlertContainer').innerHTML = localAlertOriginal;
+            initialFeedItems.forEach(i => { if (i.id === String(lastLiveId)) i.status = 'RESOLVED'; }); renderGlobalFeed();
+        }
+        async function pollLiveAlert() {
+            if (FIREBASE_ALERT_URL.includes('YOUR-PROJECT')) return;   // not configured yet
+            try {
+                const a = await (await fetch(FIREBASE_ALERT_URL, { cache: 'no-store' })).json(); if (!a) return;
+                const age = Date.now() / 1000 - Number(a.id);             // ignore stale alerts (ESP32 off)
+                if (a.status === 'ACTIVE' && age < 600) { if (String(a.id) !== String(lastLiveId)) { lastLiveId = a.id; applyLiveAlert(a); } }
+                else clearLiveAlert();
+            } catch (e) { console.log('Live alert fetch failed:', e); }
+        }
+        setInterval(pollLiveAlert, 2000); pollLiveAlert();
+    </script>
+</body>
+
+</html>
