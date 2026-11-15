@@ -23,7 +23,7 @@ module.exports = async (req, res) => {
 
         const apiKey = rawKey.trim().replace(/^["']|["']$/g, '');
 
-        // Updated endpoint to use gemini-3.8-flash as required
+        // Using gemini-3.8-flash as requested by the API error message
         const geminiRes = await fetch(`https://generativelanguage.googleapis.com/v1/models/gemini-3.8-flash:generateContent?key=${apiKey}`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
