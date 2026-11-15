@@ -23,16 +23,21 @@ module.exports = async (req, res) => {
 
         const apiKey = rawKey.trim().replace(/^["']|["']$/g, '');
 
-        // Using gemini-2.0-flash on the v1 endpoint
-        const geminiRes = await fetch(`https://generativelanguage.googleapis.com/v1/models/gemini-2.0-flash:generateContent?key=${apiKey}`, {
+        // Using gemini-3.8-flash on the updated v1beta interactions endpoint
+        const geminiRes = await fetch(`https://googleapis.com{apiKey}`, {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
+            headers: { 
+                'Content-Type': 'application/json',
+                'Api-Revision': '2026-05-20' // Required header for the modern interactions endpoint
+            },
             body: JSON.stringify({
-                contents: [
+                model: "gemini-3.8-flash",
+                input: [
                     {
-                        parts: [
-                            { text: "You are the Astra AI assistant on the Bharat Astra website, a school prototype by Team Horizon (Class 9) for disaster detection and awareness. Answer questions about natural disasters (earthquakes, cyclones, tsunamis, floods, wildfires), preparedness, and safety protocols. Keep answers friendly, clear, and concise. In emergencies, tell users to call 112 in India." },
-                            { text: latestMessage }
+                        type: "user_input",
+                        content: [
+                            { type: "text", text: "You are the Astra AI assistant on the Bharat Astra website, a school prototype by Team Horizon (Class 9) for disaster detection and awareness. Answer questions about natural disasters (earthquakes, cyclones, tsunamis, floods, wildfires), preparedness, and safety protocols. Keep answers friendly, clear, and concise. In emergencies, tell users to call 112 in India." },
+                            { type: "text", text: latestMessage }
                         ]
                     }
                 ]
@@ -46,7 +51,8 @@ module.exports = async (req, res) => {
             return res.status(200).json({ reply: `Gemini Error: ${data.error?.message || 'Invalid request'}` });
         }
 
-        const reply = data.candidates?.[0]?.content?.parts?.[0]?.text || 'Sorry, I could not process that.';
+        // Parsing using the clean structure of the modern response format
+        const reply = data.steps?.[1]?.content?.[0]?.text || data.steps?.[0]?.content?.[0]?.text || 'Sorry, I could not process that.';
         return res.status(200).json({ reply });
 
     } catch (e) {
