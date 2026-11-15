@@ -22,24 +22,45 @@ module.exports = async (req, res) => {
         }
 
         const apiKey = rawKey.trim().replace(/^["']|["']$/g, '');
+        const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-3.8-flash:generateContent?key=${apiKey}`;
 
-        // Switched to gemini-2.5-flash on the v1beta endpoint
-        const geminiRes = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-                contents: [
-                    {
-                        parts: [
-                            { text: "You are the Astra AI assistant on the Bharat Astra website, a school prototype by Team Horizon (Class 9) for disaster detection and awareness. Answer questions about natural disasters (earthquakes, cyclones, tsunamis, floods, wildfires), preparedness, and safety protocols. Keep answers friendly, clear, and concise. In emergencies, tell users to call 112 in India." },
-                            { text: latestMessage }
-                        ]
-                    }
-                ]
-            })
-        });
+        const payload = {
+            contents: [
+                {
+                    parts: [
+                        { text: "You are the Astra AI assistant on the Bharat Astra website, a school prototype by Team Horizon (Class 9) for disaster detection and awareness. Answer questions about natural disasters (earthquakes, cyclones, tsunamis, floods, wildfires), preparedness, and safety protocols. Keep answers friendly, clear, and concise. In emergencies, tell users to call 112 in India." },
+                        { text: latestMessage }
+                    ]
+                }
+            ]
+        };
 
-        const data = await geminiRes.json();
+        // Retry logic to handle temporary high-demand spikes gracefully
+        let geminiRes;
+        let data;
+        let attempts = 0;
+        const maxAttempts = 3;
+
+        while (attempts < maxAttempts) {
+            attempts++;
+            geminiRes = await fetch(url, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            });
+
+            data = await geminiRes.json();
+
+            // If successful or if it's an unrecoverable client error (like invalid key), stop retrying
+            if (geminiRes.ok || geminiRes.status === 400 || geminiRes.status === 403) {
+                break;
+            }
+
+            // If it's a high demand / rate limit error, wait 1.5 seconds before trying again
+            if (attempts < maxAttempts) {
+                await new Promise(resolve => setTimeout(resolve, 1500));
+            }
+        }
 
         if (!geminiRes.ok) {
             console.error('Gemini API Error:', JSON.stringify(data));
