@@ -1,33 +1,26 @@
-exports.handler = async (event) => {
-    // Handle CORS preflight requests
-    if (event.httpMethod === 'OPTIONS') {
-        return {
-            statusCode: 200,
-            headers: {
-                'Access-Control-Allow-Origin': '*',
-                'Access-Control-Allow-Methods': 'POST, OPTIONS',
-                'Access-Control-Allow-Headers': 'Content-Type'
-            },
-            body: ''
-        };
+module.exports = async (req, res) => {
+    // Handle CORS headers
+    res.setHeader('Access-Control-Allow-Origin', '*');
+    res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
+    res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+
+    if (req.method === 'OPTIONS') {
+        return res.status(200).end();
     }
 
-    if (event.httpMethod !== 'POST') {
-        return {
-            statusCode: 405,
-            headers: { 'Access-Control-Allow-Origin': '*' },
-            body: 'Method not allowed'
-        };
+    if (req.method !== 'POST') {
+        return res.status(405).json({ error: 'Method not allowed' });
     }
 
     try {
-        const { messages } = JSON.parse(event.body || '{}');
+        const { messages } = req.body || {};
         const clean = (messages || []).slice(-10).map(m => ({
+            apiName: undefined,
             role: m.role === 'assistant' ? 'assistant' : 'user',
             content: String(m.content).slice(0, 500)
         }));
 
-        const res = await fetch('https://api.anthropic.com/v1/messages', {
+        const apiRes = await fetch('https://api.anthropic.com/v1/messages', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -42,25 +35,18 @@ exports.handler = async (event) => {
             })
         });
 
-        const data = await res.json();
-        const reply = (data.content || []).map(b => b.text || '').join('').trim();
+        const data = await apiRes.json();
+        
+        if (!apiRes.ok) {
+            console.error('Anthropic API error:', data);
+            return res.status(500).json({ error: data.error?.message || 'Anthropic error' });
+        }
 
-        return {
-            statusCode: 200,
-            headers: {
-                'Content-Type': 'application/json',
-                'Access-Control-Allow-Origin': '*'
-            },
-            body: JSON.stringify({ reply: reply || 'Sorry, I could not answer that.' })
-        };
+        const reply = (data.content || []).map(b => b.text || '').join('').trim();
+        return res.status(200).json({ reply: reply || 'Sorry, I could not answer that.' });
+
     } catch (e) {
-        return {
-            statusCode: 500,
-            headers: {
-                'Content-Type': 'application/json',
-                'Access-Control-Allow-Origin': '*'
-            },
-            body: JSON.stringify({ error: 'server error' })
-        };
+        console.error('Server error:', e);
+        return res.status(500).json({ error: 'server error' });
     }
 };
