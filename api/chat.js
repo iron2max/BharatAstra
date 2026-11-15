@@ -18,13 +18,13 @@ module.exports = async (req, res) => {
 
         const rawKey = process.env.GEMINI_API_KEY || process.env.ANTHROPIC_API_KEY;
         if (!rawKey) {
-            return res.status(200).json({ reply: "API key is missing in Vercel settings. Please check your environment variables." });
+            return res.status(200).json({ reply: "API key is missing in Vercel settings." });
         }
 
-        // Clean up any accidental spaces or quotes from the key
         const apiKey = rawKey.trim().replace(/^["']|["']$/g, '');
 
-        const geminiRes = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`, {
+        // Using gemini-pro which is universally supported on v1beta
+        const geminiRes = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key=${apiKey}`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
@@ -43,7 +43,7 @@ module.exports = async (req, res) => {
 
         if (!geminiRes.ok) {
             console.error('Gemini API Error:', JSON.stringify(data));
-            return res.status(200).json({ reply: `Gemini API Error: ${data.error?.message || 'Invalid request'}` });
+            return res.status(200).json({ reply: `Gemini Error: ${data.error?.message || 'Invalid request'}` });
         }
 
         const reply = data.candidates?.[0]?.content?.parts?.[0]?.text || 'Sorry, I could not process that.';
