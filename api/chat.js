@@ -15,32 +15,33 @@ module.exports = async (req, res) => {
         const { messages } = req.body || {};
         const latestMessage = messages && messages.length > 0 ? messages[messages.length - 1].content : 'Hello';
 
-        const apiKey = process.env.ANTHROPIC_API_KEY;
+        const apiKey = process.env.ANTHROPIC_API_KEY || process.env.GEMINI_API_KEY;
         if (!apiKey) {
-            return res.status(500).json({ error: 'Anthropic API key not configured on server' });
+            return res.status(500).json({ error: 'API key not configured on server' });
         }
 
-        // Call Anthropic API using the current model
-        const anthropicRes = await fetch('https://api.anthropic.com/v1/messages', {
+        const geminiRes = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-3.8-flash:generateContent?key=${apiKey}`, {
             method: 'POST',
             headers: {
-                'Content-Type': 'application/json',
-                'X-API-Key': apiKey
+                'Content-Type': 'application/json'
             },
             body: JSON.stringify({
-                model: 'claude-3-5-sonnet-20241022',
-                max_tokens: 1024,
-                messages: [
-                    { role: 'user', content: latestMessage }
+                contents: [
+                    {
+                        parts: [
+                            { text: "You are the Astra AI assistant on the Bharat Astra website, a school prototype by Team Horizon (Class 9) for disaster detection and awareness. Answer questions about natural disasters (earthquakes, cyclones, tsunamis, floods, wildfires), preparedness, and safety protocols. Keep answers friendly, clear, and concise. In emergencies, tell users to call 112 in India." },
+                            { text: latestMessage }
+                        ]
+                    }
                 ]
             })
         });
 
-        const data = await anthropicRes.json();
+        const data = await geminiRes.json();
 
-        if (!anthropicRes.ok) {
-            console.error('Anthropic API error:', data);
-            return res.status(500).json({ error: data.error?.message || 'Anthropic error' });
+        if (!geminiRes.ok) {
+            console.error('Gemini API error:', data);
+            return res.status(500).json({ error: data.error?.message || 'Gemini error' });
         }
 
         const reply = data.candidates?.[0]?.content?.parts?.[0]?.text || 'Sorry, I could not process that.';

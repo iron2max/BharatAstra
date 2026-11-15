@@ -207,9 +207,14 @@ async function sendChat() {
     inp.value = ''; addChatMsg(text, 'user'); chatHistory.push({ role: 'user', content: text });
     const typing = addChatMsg('...', 'bot'); let reply;
     try {
-        // FIXED: Pointing to Vercel's correct backend function endpoint (/api/chat)
+        // Connected to Vercel's serverless backend function endpoint (/api/chat)
         const res = await fetch('/api/chat', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ messages: chatHistory.slice(-10) }) });
-        if (!res.ok) throw 0; reply = (await res.json()).reply;
-    } catch (e) { const h = FALLBACK.find(([re]) => re.test(text)); reply = h ? h[1] : "I can't reach the AI service right now. For emergencies, call your local emergency number (112 in India)."; }
+        if (!res.ok) throw 0;
+        const data = await res.json();
+        reply = data.reply || data.error;
+    } catch (e) {
+        const h = FALLBACK.find(([re]) => re.test(text));
+        reply = h ? h[1] : "I can't reach the AI service right now. For emergencies, call your local emergency number (112 in India).";
+    }
     typing.textContent = reply; chatHistory.push({ role: 'assistant', content: reply });
 }
