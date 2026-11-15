@@ -1,11 +1,32 @@
 exports.handler = async (event) => {
-    if (event.httpMethod !== 'POST') return { statusCode: 405, body: 'Method not allowed' };
+    // Handle CORS preflight requests
+    if (event.httpMethod === 'OPTIONS') {
+        return {
+            statusCode: 200,
+            headers: {
+                'Access-Control-Allow-Origin': '*',
+                'Access-Control-Allow-Methods': 'POST, OPTIONS',
+                'Access-Control-Allow-Headers': 'Content-Type'
+            },
+            body: ''
+        };
+    }
+
+    if (event.httpMethod !== 'POST') {
+        return { 
+            statusCode: 405, 
+            headers: { 'Access-Control-Allow-Origin': '*' },
+            body: 'Method not allowed' 
+        };
+    }
+
     try {
         const { messages } = JSON.parse(event.body || '{}');
         const clean = (messages || []).slice(-10).map(m => ({
             role: m.role === 'assistant' ? 'assistant' : 'user',
             content: String(m.content).slice(0, 500)
         }));
+
         const res = await fetch('https://api.anthropic.com/v1/messages', {
             method: 'POST',
             headers: {
@@ -20,10 +41,26 @@ exports.handler = async (event) => {
                 messages: clean
             })
         });
+
         const data = await res.json();
         const reply = (data.content || []).map(b => b.text || '').join('').trim();
-        return { statusCode: 200, headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ reply: reply || 'Sorry, I could not answer that.' }) };
+
+        return { 
+            statusCode: 200, 
+            headers: { 
+                'Content-Type': 'application/json',
+                'Access-Control-Allow-Origin': '*' 
+            }, 
+            body: JSON.stringify({ reply: reply || 'Sorry, I could not answer that.' }) 
+        };
     } catch (e) {
-        return { statusCode: 500, body: JSON.stringify({ error: 'server error' }) };
+        return { 
+            statusCode: 500, 
+            headers: { 
+                'Content-Type': 'application/json',
+                'Access-Control-Allow-Origin': '*' 
+            }, 
+            body: JSON.stringify({ error: 'server error' }) 
+        };
     }
 };
