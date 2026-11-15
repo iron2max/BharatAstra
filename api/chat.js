@@ -23,8 +23,8 @@ module.exports = async (req, res) => {
 
         const apiKey = rawKey.trim().replace(/^["']|["']$/g, '');
 
-        // Updated to use v1beta endpoint for gemini-1.5-flash compatibility
-        const geminiRes = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`, {
+        // Using the active gemini-3.8-flash model on the v1beta endpoint
+        const geminiRes = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-3.8-flash:generateContent?key=${apiKey}`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
