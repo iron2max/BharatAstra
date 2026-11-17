@@ -8,10 +8,9 @@ function updateMissionClock() {
     const minutes = String(now.getMinutes()).padStart(2, '0');
     const seconds = String(now.getSeconds()).padStart(2, '0');
 
-    // Determine AM/PM suffix and convert 24hr to 12hr format
     const ampm = hours >= 12 ? 'PM' : 'AM';
     hours = hours % 12;
-    hours = hours ? hours : 12; // the hour '0' should be '12'
+    hours = hours ? hours : 12;
     const formattedHours = String(hours).padStart(2, '0');
 
     if ($('liveClock')) {
@@ -46,6 +45,54 @@ function playBeep(freq = 880, dur = 0.2) {
         o.type = 'sawtooth'; o.frequency.value = freq; g.gain.value = 0.1; o.connect(g); g.connect(c.destination); o.start(); o.stop(c.currentTime + dur);
     } catch (e) { }
 }
+
+/* ================= ESP32 LIVE CAM LINK & 'L' SHORTCUT ================= */
+const DEFAULT_ESP32_CAM_URL = 'http://192.168.4.1:81/stream';
+
+function getEsp32CamUrl() {
+    const input = $('esp32CamUrlInput');
+    const saved = localStorage.getItem('bharatAstraEsp32CamUrl');
+    if (input && input.value.trim()) return input.value.trim();
+    return saved || DEFAULT_ESP32_CAM_URL;
+}
+
+function saveEsp32CamUrl(url) {
+    const clean = (url || '').trim();
+    if (!clean) return;
+    localStorage.setItem('bharatAstraEsp32CamUrl', clean);
+    if ($('esp32CamUrlInput')) $('esp32CamUrlInput').value = clean;
+}
+
+function configureEsp32CamUrl() {
+    const current = getEsp32CamUrl();
+    const updated = prompt('Enter your ESP32-CAM Live Stream URL:', current);
+    if (updated && updated.trim()) {
+        saveEsp32CamUrl(updated.trim());
+    }
+}
+
+function openEsp32CamWindow() {
+    const url = getEsp32CamUrl();
+    saveEsp32CamUrl(url);
+    window.open(url, '_blank', 'noopener,noreferrer');
+}
+
+(function initEsp32Cam() {
+    const saved = localStorage.getItem('bharatAstraEsp32CamUrl');
+    if (saved && $('esp32CamUrlInput')) {
+        $('esp32CamUrlInput').value = saved;
+    }
+})();
+
+document.addEventListener('keydown', (e) => {
+    const tag = (e.target && e.target.tagName || '').toLowerCase();
+    if (tag === 'input' || tag === 'textarea' || tag === 'select' || e.target?.isContentEditable) return;
+    if (e.ctrlKey || e.metaKey || e.altKey) return;
+    if (e.key && e.key.toLowerCase() === 'l') {
+        e.preventDefault();
+        openEsp32CamWindow();
+    }
+});
 
 /* ================= BACKGROUND PARTICLES ================= */
 const cv = $('orbitCanvas'), cx = cv.getContext('2d');
@@ -95,7 +142,10 @@ $('teamGrid').innerHTML = ['IVANKA SINGH', 'AVYUKT SAXENA', 'MITHRA VINOTHKUMAR'
 $('roadmapGrid').innerHTML = [['PHYSICAL PROTOTYPE', 'Current moving platform and sensor validation.'], ['SMART SENSORS', 'Planned sensor expansion beyond the current prototype.'], ['AI DETECTION', 'Planned AI/ML pattern classification.'], ['ALERT NETWORK', 'Mesh cloud node notification relays.'], ['LOCATION AWARE', 'Geofenced browser & push alerts.'], ['LARGE-SCALE', 'Official emergency authority grid integration.']]
     .map(([t, d], i) => `<div class="p-4 rounded-xl bg-slate-900/80 border ${i == 0 ? 'border-brand-cyan/30' : 'border-slate-800'} text-center space-y-2"><div class="${i == 0 ? 'text-brand-cyan' : 'text-slate-300'} font-bold font-orbitron">0${i + 1}. ${t}</div><p class="text-[11px] text-slate-400">${d}</p></div>`).join('');
 
-/* ================= DEMO SIMULATION + FEED ================= */
+/* ================= DEMO SIMULATION + LIVE FIREBASE TELEMETRY ================= */
+const FIREBASE_ALERT_URL = 'https://bharatastra-154d9-default-rtdb.asia-southeast1.firebasedatabase.app/alert.json';
+let lastHandledAlertId = null;
+
 const initialFeedItems = [
     { id: '1', type: 'FIRE', title: 'FIRE DEMO ALERT', location: 'Miniature City Zone A', time: '10 mins ago', status: 'ACTIVE SIMULATION' },
     { id: '2', type: 'FLOOD', title: 'FLOOD DEMO ALERT', location: 'Shoreline Demonstration Area', time: '25 mins ago', status: 'ACTIVE SIMULATION' },
@@ -118,20 +168,84 @@ function triggerDemoSimulation(type) {
     const ok = '<span class="text-emerald-400">NORMAL</span>';
     if (type === 'FIRE') {
         $('dashFireStatus').innerHTML = '<span class="text-brand-fire font-bold animate-pulse">SMOKE ALERT</span>'; $('dashFloodStatus').innerHTML = ok;
+        if ($('heroSmokeReadout')) { $('heroSmokeReadout').innerText = 'ALERT'; $('heroSmokeReadout').className = 'text-brand-fire'; }
         setBanner('bg-red-950/90 border-b border-brand-fire/50', 'bg-brand-fire', 'STATUS: <span class="text-brand-fire font-bold tracking-wider">ACTIVE FIRE WARNING DETECTED IN DEMO AREA</span>');
         openEmergencyModal('FIRE', 'FIRE HAZARD DETECTED', 'Miniature Fire Demonstration Area', 'Smoke sensor alert detected. Buzzer triggered.'); playBeep(900, .4);
     } else if (type === 'FLOOD') {
         $('dashFireStatus').innerHTML = ok; $('dashFloodStatus').innerHTML = '<span class="text-brand-flood font-bold animate-pulse">FLOOD WARNING (HIGH)</span>';
+        if ($('heroUltrasonicReadout')) { $('heroUltrasonicReadout').innerText = 'HIGH'; $('heroUltrasonicReadout').className = 'text-brand-flood'; }
         setBanner('bg-blue-950/90 border-b border-brand-flood/50', 'bg-brand-flood', 'STATUS: <span class="text-brand-flood font-bold tracking-wider">ACTIVE FLOOD HAZARD DETECTED IN SHORE DEMO</span>');
         openEmergencyModal('FLOOD', 'FLOOD HAZARD DETECTED', 'Shore Demonstration Area', 'Ultrasonic water-distance threshold reached. Flood alert active.'); playBeep(600, .4);
     } else {
         $('dashFireStatus').innerHTML = ok; $('dashFloodStatus').innerHTML = ok;
+        if ($('heroSmokeReadout')) { $('heroSmokeReadout').innerText = 'CLEAR'; $('heroSmokeReadout').className = 'text-emerald-400'; }
+        if ($('heroUltrasonicReadout')) { $('heroUltrasonicReadout').innerText = 'NORMAL'; $('heroUltrasonicReadout').className = 'text-emerald-400'; }
         setBanner('bg-slate-900/90 border-b border-brand-cyan/20', 'bg-brand-success', 'STATUS: <span class="text-brand-success font-bold tracking-wider">NO ACTIVE MAJOR EMERGENCIES REPORTED</span>');
     }
 }
 
-// Default state set explicitly to normal on load to prevent false refresh alerts
+async function pollFirebaseAlerts() {
+    try {
+        const res = await fetch(FIREBASE_ALERT_URL + '?t=' + Date.now());
+        if (!res.ok) throw new Error('HTTP ' + res.status);
+        const data = await res.json();
+
+        if ($('firebaseSyncStatus')) {
+            $('firebaseSyncStatus').innerHTML = '<i class="fa-solid fa-database text-brand-success mr-1.5"></i>CLOUD TELEMETRY: <span class="text-brand-success font-bold">CONNECTED</span>';
+        }
+
+        if (!data) return;
+
+        if ($('liveSmokeVal') && data.smoke !== undefined) {
+            $('liveSmokeVal').innerText = data.smoke;
+        }
+        if ($('liveFlameVal') && data.type) {
+            const hasFlame = data.type.includes('FLAME') || data.type.includes('FIRE');
+            $('liveFlameVal').innerText = (data.status === 'ACTIVE' && hasFlame) ? 'DETECTED' : 'CLEAR';
+            $('liveFlameVal').className = (data.status === 'ACTIVE' && hasFlame)
+                ? 'text-xl font-orbitron font-bold text-brand-fire animate-pulse'
+                : 'text-xl font-orbitron font-bold text-emerald-400';
+        }
+
+        const alertKey = `${data.id || ''}_${data.status || ''}_${data.type || ''}`;
+        if (alertKey === lastHandledAlertId) return;
+        lastHandledAlertId = alertKey;
+
+        if (data.status === 'ACTIVE') {
+            const title = data.type || 'FIRE HAZARD DETECTED';
+            const loc = data.location || 'Miniature Demo City - Zone A';
+            const desc = `Live ESP32 Sensor Alert (${title}) | MQ-2 Smoke Reading: ${data.smoke ?? '--'} | Time: ${data.time || 'LIVE'}`;
+
+            $('dashFireStatus').innerHTML = `<span class="text-brand-fire font-bold animate-pulse">${esc(title)}</span>`;
+            if ($('heroSmokeReadout')) { $('heroSmokeReadout').innerText = 'ALERT'; $('heroSmokeReadout').className = 'text-brand-fire'; }
+            setBanner('bg-red-950/90 border-b border-brand-fire/50', 'bg-brand-fire', `STATUS: <span class="text-brand-fire font-bold tracking-wider">${esc(title)} AT ${esc(loc.toUpperCase())}</span>`);
+
+            openEmergencyModal('FIRE', title, loc, desc);
+            playBeep(900, 0.45);
+
+            initialFeedItems.unshift({
+                id: String(data.id || Date.now()),
+                type: 'FIRE',
+                title: title,
+                location: loc,
+                time: data.time || 'Just now',
+                status: 'LIVE ESP32 ALERT'
+            });
+            if (initialFeedItems.length > 8) initialFeedItems.pop();
+            renderGlobalFeed();
+        } else if (data.status === 'CLEAR') {
+            triggerDemoSimulation('NORMAL');
+        }
+    } catch (err) {
+        if ($('firebaseSyncStatus')) {
+            $('firebaseSyncStatus').innerHTML = '<i class="fa-solid fa-database text-amber-400 mr-1.5"></i>CLOUD TELEMETRY: <span class="text-amber-400">OFFLINE</span>';
+        }
+    }
+}
+
 triggerDemoSimulation('NORMAL');
+pollFirebaseAlerts();
+setInterval(pollFirebaseAlerts, 2500);
 
 /* ================= MODALS ================= */
 function openEmergencyModal(type, title, loc, desc) {
@@ -207,7 +321,6 @@ async function sendChat() {
     inp.value = ''; addChatMsg(text, 'user'); chatHistory.push({ role: 'user', content: text });
     const typing = addChatMsg('...', 'bot'); let reply;
     try {
-        // Connected to Vercel's serverless backend function endpoint (/api/chat)
         const res = await fetch('/api/chat', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ messages: chatHistory.slice(-10) }) });
         if (!res.ok) throw 0;
         const data = await res.json();
