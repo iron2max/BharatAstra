@@ -289,7 +289,8 @@
                         <h2 class="text-3xl sm:text-5xl font-orbitron font-black text-white mt-2">BHARAT ASTRA MISSION
                             CONTROL</h2>
                     </div>
-                    <div id="firebaseSyncStatus" class="text-xs font-mono px-3 py-1.5 rounded-lg bg-slate-900 border border-slate-700 text-slate-400">
+                    <div id="firebaseSyncStatus"
+                        class="text-xs font-mono px-3 py-1.5 rounded-lg bg-slate-900 border border-slate-700 text-slate-400">
                         <i class="fa-solid fa-database text-brand-cyan mr-1.5"></i>CLOUD TELEMETRY: CONNECTING...
                     </div>
                 </div>
@@ -328,8 +329,10 @@
                     <div>
                         <span class="tag inline-block bg-brand-cyan/10 border border-brand-cyan/30 text-brand-cyan"><i
                                 class="fa-solid fa-video"></i> OVERHEAD OPTICAL DOWNLINK</span>
-                        <h2 class="text-3xl sm:text-5xl font-orbitron font-black text-white mt-2">ACCESS LIVE FOOTAGE</h2>
-                        <p class="text-slate-400 font-rajdhani text-lg mt-1">Direct ESP32-CAM surveillance stream from Miniature Demo City — Zone A.</p>
+                        <h2 class="text-3xl sm:text-5xl font-orbitron font-black text-white mt-2">ACCESS LIVE FOOTAGE
+                        </h2>
+                        <p class="text-slate-400 font-rajdhani text-lg mt-1">Direct ESP32-CAM surveillance stream from
+                            Miniature Demo City — Zone A.</p>
                     </div>
                     <button onclick="openEsp32CamWindow()"
                         class="px-6 py-3.5 rounded-xl bg-gradient-to-r from-brand-cyan to-blue-600 text-slate-950 font-orbitron text-xs font-bold shadow-[0_0_20px_rgba(0,242,254,.35)] hover:opacity-95 transition-all inline-flex items-center justify-center gap-2 shrink-0">
@@ -337,20 +340,83 @@
                     </button>
                 </div>
 
-                <div class="glass-panel rounded-2xl border border-brand-cyan/30 p-6 sm:p-8 corner-accents grid grid-cols-1 lg:grid-cols-12 gap-8 items-center">
+                <div
+                    class="glass-panel rounded-2xl border border-brand-cyan/30 p-6 sm:p-8 corner-accents grid grid-cols-1 lg:grid-cols-12 gap-8 items-center">
                     <div class="lg:col-span-7">
-                        <div class="relative aspect-video w-full rounded-xl bg-slate-950 border border-slate-800 overflow-hidden flex flex-col items-center justify-center p-6 text-center">
-                            <div class="absolute top-3 left-3 flex items-center gap-2 px-2.5 py-1 rounded bg-slate-900/90 border border-slate-700 text-[10px] font-mono">
+                        <div
+                            class="relative aspect-video w-full rounded-xl bg-slate-950 border border-slate-800 overflow-hidden flex flex-col items-center justify-center p-6 text-center">
+                            <div
+                                class="absolute top-3 left-3 flex items-center gap-2 px-2.5 py-1 rounded bg-slate-900/90 border border-slate-700 text-[10px] font-mono">
                                 <span class="w-2 h-2 rounded-full bg-brand-fire animate-ping"></span>
                                 <span class="text-slate-300 font-bold">CAM-01 // ESP32-CAM</span>
                             </div>
-                            <div class="absolute top-3 right-3 text-[10px] font-mono text-brand-cyan bg-slate-900/90 px-2.5 py-1 rounded border border-brand-cyan/30">
+                            <div
+                                class="absolute top-3 right-3 text-[10px] font-mono text-brand-cyan bg-slate-900/90 px-2.5 py-1 rounded border border-brand-cyan/30">
                                 SHORTCUT: PRESS [L]
                             </div>
                             <i class="fa-solid fa-satellite-dish text-4xl text-brand-cyan/70 mb-3"></i>
-                            <h3 class="font-orbitron font-bold text-white text-base sm:text-lg">EXTERNAL ESP32-CAM STREAM READY</h3>
-                            <p class="font-mono text-xs text-slate-400 max-w-md mt-2">Click <span class="text-brand-cyan font-bold">Access Live Footage</span> or press the <span class="px-1.5 py-0.5 rounded bg-slate-800 border border-slate-600 text-white font-bold">L</span> key on your keyboard to launch the live camera feed in a separate tab.</p>
+                            <h3 class="font-orbitron font-bold text-white text-base sm:text-lg">EXTERNAL ESP32-CAM
+                                STREAM READY</h3>
+                            <p class="font-mono text-xs text-slate-400 max-w-md mt-2">Click <span
+                                    class="text-brand-cyan font-bold">Access Live Footage</span> or press the <span
+                                    class="px-1.5 py-0.5 rounded bg-slate-800 border border-slate-600 text-white font-bold">L</span>
+                                key on your keyboard to launch the live camera feed in a separate tab.</p>
                             <button onclick="openEsp32CamWindow()"
                                 class="mt-5 px-6 py-3 rounded-xl bg-brand-cyan/15 hover:bg-brand-cyan hover:text-slate-950 border border-brand-cyan text-brand-cyan font-orbitron text-xs font-bold transition-all flex items-center gap-2">
                                 <i class="fa-solid fa-video"></i> ACCESS LIVE FOOTAGE
                             </button>
+                        </div>
+                    </div>
+        </section>
+
+
+        <!-- LIVE ALERT HISTORY -->
+        <section id="alerts" class="py-16 border-t border-slate-800/80">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-5">
+                <div><span class="tag bg-brand-fire/10 border border-brand-fire/30 text-brand-fire">LIVE SENSOR
+                        EVENTS</span>
+                    <h2 class="text-3xl font-orbitron font-black text-white mt-2">EMERGENCY ALERTS</h2>
+                    <p class="text-slate-400 text-sm">Alerts received from the ESP32 through Firebase appear here.</p>
+                </div>
+                <div id="globalFeedList" class="space-y-3"></div>
+            </div>
+        </section>
+
+        <!-- Required containers used by the existing web.js renderers -->
+        <div class="hidden" aria-hidden="true">
+            <div id="problemCards"></div>
+            <div id="flowSteps"></div>
+            <div id="galleryGrid"></div>
+            <div id="hwGrid"></div>
+            <div id="teamGrid"></div>
+            <div id="roadmapGrid"></div>
+            <input id="esp32CamUrlInput" value="http://192.168.4.1:81/stream">
+            <select id="accCountry"></select><select id="accCity"></select>
+            <input id="accName"><span id="savedLocationDisplay"></span>
+        </div>
+
+        <!-- Emergency popup -->
+        <div id="emergencyModal" class="hidden fixed inset-0 z-[100] bg-black/80 p-4 flex items-center justify-center">
+            <div id="emergencyModalCard"
+                class="w-full max-w-lg glass-panel p-6 rounded-2xl border-2 border-brand-fire space-y-5">
+                <div class="flex items-center gap-3">
+                    <div id="emergencyModalIcon"
+                        class="w-12 h-12 rounded-xl bg-brand-fire/20 text-brand-fire flex items-center justify-center">
+                        <i class="fa-solid fa-triangle-exclamation"></i></div>
+                    <h2 id="emergencyModalTitle" class="font-orbitron font-black text-2xl text-brand-fire">FIRE ALERT
+                    </h2>
+                </div>
+                <p id="emergencyModalDesc" class="text-slate-200"></p>
+                <div class="text-xs font-mono text-slate-400">LOCATION: <span id="emergencyModalLoc"
+                        class="text-white"></span><br>TIME: <span id="emergencyModalTime" class="text-white"></span>
+                </div>
+                <button onclick="closeEmergencyModal()"
+                    class="px-5 py-3 rounded-lg bg-brand-cyan text-slate-950 font-bold">ACKNOWLEDGE</button>
+            </div>
+        </div>
+
+    </main>
+    <script src="web.js" defer></script>
+</body>
+
+</html>
