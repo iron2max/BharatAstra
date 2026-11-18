@@ -1,4 +1,3 @@
-
 /* ================= HELPERS & LIVE CLOCK ================= */
 const $ = id => document.getElementById(id);
 const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
@@ -48,7 +47,7 @@ function playBeep(freq = 880, dur = 0.2) {
 }
 
 /* ================= ESP32 LIVE CAM LINK & 'L' SHORTCUT ================= */
-const DEFAULT_ESP32_CAM_URL = 'http://10.95.93.246//stream';
+const DEFAULT_ESP32_CAM_URL = 'http://192.168.4.1:81/stream';
 
 function getEsp32CamUrl() {
     const input = $('esp32CamUrlInput');
