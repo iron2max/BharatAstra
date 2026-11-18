@@ -1,3 +1,10 @@
+
+
+
+
+
+
+
 /* ================= HELPERS & LIVE CLOCK ================= */
 const $ = id => document.getElementById(id);
 const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
@@ -212,39 +219,38 @@ function triggerDemoSimulation(type) {
 
 async function pollFirebaseAlerts() {
     try {
-        const res = await fetch(FIREBASE_ALERT_URL + '?t=' + Date.now());
-        if (!res.ok) throw new Error('HTTP ' + res.status);
+        const res = await fetch(FIREBASE_ALERT_URL + '?t=' + Date.now(), { cache: 'no-store' });
+        if (!res.ok) throw new Error('Firebase HTTP ' + res.status);
         const data = await res.json();
 
         if ($('firebaseSyncStatus')) {
-            $('firebaseSyncStatus').innerHTML = '<i class="fa-solid fa-database text-brand-success mr-1.5"></i>CLOUD TELEMETRY: <span class="text-brand-success font-bold">CONNECTED</span>';
+            $('firebaseSyncStatus').innerHTML =
+                '<i class="fa-solid fa-database text-brand-success mr-1.5"></i>CLOUD TELEMETRY: <span class="text-brand-success font-bold">CONNECTED</span>';
         }
-
         if (!data) {
             isInitialFetch = false;
             return;
         }
 
-        // Read fields sent by your ESP32: { active: bool, angle: float, eventId: int, device: string }
-        const isActive = Boolean(data.active);
-        const angle = Number(data.angle || 0);
-        const eventId = data.eventId || 0;
+        // Expected ESP32 JSON: { active: true, angle: 82.5, eventId: 1, device: "BharatAstra MPU6050" }
+        const isActive = data.active === true || data.active === 1 ||
+            String(data.active).toLowerCase() === 'true';
+        const angle = Number(data.angle ?? 0);
+        const eventId = data.eventId ?? data.event_id ?? data.timestamp ?? 0;
         const device = data.device || 'BharatAstra MPU6050';
 
         latestTelemetry = { active: isActive, angle, eventId, device };
-
         if ($('tiltAngleVal')) $('tiltAngleVal').innerText = angle.toFixed(2) + '°';
         if ($('eventIdVal')) $('eventIdVal').innerText = eventId;
 
         const currentEventKey = `${eventId}_${isActive}`;
 
-        // On initial page load, record existing state so old Firebase records don't trigger a popup on refresh
+        // FIX: Show an alert that was already active when the website opened.
         if (isInitialFetch) {
             isInitialFetch = false;
             lastHandledEventKey = currentEventKey;
-            if (!isActive) {
-                triggerDemoSimulation('NORMAL');
-            }
+            if (isActive) showLiveMpuAlert(angle, eventId, device);
+            else triggerDemoSimulation('NORMAL');
             return;
         }
 
@@ -252,35 +258,53 @@ async function pollFirebaseAlerts() {
         lastHandledEventKey = currentEventKey;
 
         if (isActive) {
-            const desc = `Live ESP32 Alert (${device}) | Tilt Angle: ${angle.toFixed(2)}° | Event #${eventId}`;
-            document.body.classList.add("flood-emergency-mode");
-            if ($('dashFloodStatus')) $('dashFloodStatus').innerHTML = `<span class="text-brand-flood font-bold animate-pulse">FLOOD / TILT ALERT (${angle.toFixed(1)}°)</span>`;
-            if ($('heroUltrasonicReadout')) { $('heroUltrasonicReadout').innerText = 'FLOOD'; $('heroUltrasonicReadout').className = 'text-brand-flood'; }
-            setBanner('bg-blue-950/90 border-b border-brand-flood/50', 'bg-brand-flood', `STATUS: <span class="text-brand-flood font-bold tracking-wider">FLOOD / TILT ALERT DETECTED (${angle.toFixed(2)}°)</span>`);
-
-            openEmergencyModal('FLOOD', 'FLOOD / TILT DETECTED', 'Buoy Station Zone A', desc);
-            playBeep(600, 0.45);
-
-            initialFeedItems.unshift({
-                id: String(eventId || Date.now()),
-                type: 'FLOOD',
-                title: `BUOY TILT ALERT (${angle.toFixed(1)}°)`,
-                location: 'Buoy Station Zone A',
-                time: new Date().toLocaleTimeString(),
-                status: 'LIVE ESP32 ALERT'
-            });
-            if (initialFeedItems.length > 8) initialFeedItems.pop();
-            renderGlobalFeed();
+            showLiveMpuAlert(angle, eventId, device);
         } else {
-            document.body.classList.remove("flood-emergency-mode");
+            document.body.classList.remove('flood-emergency-mode');
             closeEmergencyModal();
             triggerDemoSimulation('NORMAL');
         }
     } catch (err) {
+        console.error('Bharat Astra Firebase alert read failed:', err);
         isInitialFetch = false;
         if ($('firebaseSyncStatus')) {
-            $('firebaseSyncStatus').innerHTML = '<i class="fa-solid fa-database text-amber-400 mr-1.5"></i>CLOUD TELEMETRY: <span class="text-amber-400">WAITING FOR ESP32</span>';
+            $('firebaseSyncStatus').innerHTML =
+                '<i class="fa-solid fa-triangle-exclamation text-amber-400 mr-1.5"></i>CLOUD TELEMETRY: <span class="text-amber-400">CONNECTION ERROR</span>';
         }
+    }
+}
+
+function showLiveMpuAlert(angle, eventId, device) {
+    const desc = `Live ESP32 Alert (${device}) | Tilt Angle: ${angle.toFixed(2)}° | Event #${eventId}`;
+    document.body.classList.add('flood-emergency-mode');
+    if ($('dashFloodStatus')) {
+        $('dashFloodStatus').innerHTML =
+            `<span class="text-brand-flood font-bold animate-pulse">FLOOD / TILT ALERT (${angle.toFixed(1)}°)</span>`;
+    }
+    if ($('heroUltrasonicReadout')) {
+        $('heroUltrasonicReadout').innerText = 'FLOOD';
+        $('heroUltrasonicReadout').className = 'text-brand-flood';
+    }
+    setBanner(
+        'bg-blue-950/90 border-b border-brand-flood/50',
+        'bg-brand-flood',
+        `STATUS: <span class="text-brand-flood font-bold tracking-wider">FLOOD / TILT ALERT DETECTED (${angle.toFixed(2)}°)</span>`
+    );
+    openEmergencyModal('FLOOD', 'FLOOD / TILT DETECTED', 'Buoy Station Zone A', desc);
+    playBeep(600, 0.45);
+
+    const feedId = String(eventId || Date.now());
+    if (!initialFeedItems.some(item => item.id === feedId)) {
+        initialFeedItems.unshift({
+            id: feedId,
+            type: 'FLOOD',
+            title: `BUOY TILT ALERT (${angle.toFixed(1)}°)`,
+            location: 'Buoy Station Zone A',
+            time: new Date().toLocaleTimeString(),
+            status: 'LIVE ESP32 ALERT'
+        });
+        if (initialFeedItems.length > 8) initialFeedItems.pop();
+        renderGlobalFeed();
     }
 }
 
@@ -402,3 +426,7 @@ async function sendChat() {
     if (typing) typing.textContent = reply;
     chatHistory.push({ role: 'assistant', content: reply });
 }
+
+
+
+
