@@ -56,7 +56,7 @@ function playBeep(freq = 880, dur = 0.2) {
 }
 
 /* ================= ESP32 LIVE CAM LINK & 'L' SHORTCUT ================= */
-const DEFAULT_ESP32_CAM_URL = 'http://10.95.93.246/';
+const DEFAULT_ESP32_CAM_URL = 'http://10.95.93.246/stream';
 
 function getEsp32CamUrl() {
     const input = $('esp32CamUrlInput');
