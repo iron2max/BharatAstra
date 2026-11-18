@@ -162,7 +162,7 @@ if ($('roadmapGrid')) {
 
 /* ================= DEMO SIMULATION + LIVE FIREBASE TELEMETRY ================= */
 // Matches your ESP32 path: /alerts/latest.json
-const FIREBASE_ALERT_URL = 'https://bharatastra-154d9-default-rtdb.asia-southeast1.firebasedatabase.app.json';
+const FIREBASE_ALERT_URL = 'https://bharatastra-154d9-default-rtdb.asia-southeast1.firebasedatabase.app/alerts/latest.json';
 let isInitialFetch = true;
 let lastHandledEventKey = null;
 let latestTelemetry = { active: false, angle: 0, eventId: 0 };
