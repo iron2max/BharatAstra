@@ -161,6 +161,7 @@ const initialFeedItems = [
     { id: '3', type: 'FIRE', title: 'SMOKE SENSOR TEST', location: 'Satellite Track Section 02', time: '1 hour ago', status: 'RESOLVED' }
 ];
 function renderGlobalFeed() {
+    if (!$('globalFeedList')) return;
     $('globalFeedList').innerHTML = initialFeedItems.map(i => {
         const f = i.type === 'FIRE';
         return `<div class="p-4 rounded-xl glass-panel border ${f ? 'border-brand-fire/30' : 'border-brand-flood/30'} flex flex-col sm:flex-row sm:items-center justify-between gap-3">
@@ -171,7 +172,7 @@ function renderGlobalFeed() {
 }
 renderGlobalFeed();
 
-function setBanner(cls, dot, html) { $('homepageEmergencyBanner').className = 'relative z-30 ' + cls + ' py-2.5 px-4 text-center text-xs font-mono'; $('bannerStatusDot').className = 'w-2.5 h-2.5 rounded-full animate-ping ' + dot; $('bannerText').innerHTML = html; }
+function setBanner(cls, dot, html) { if ($('homepageEmergencyBanner')) $('homepageEmergencyBanner').className = 'relative z-30 ' + cls + ' py-2.5 px-4 text-center text-xs font-mono'; if ($('bannerStatusDot')) $('bannerStatusDot').className = 'w-2.5 h-2.5 rounded-full animate-ping ' + dot; if ($('bannerText')) $('bannerText').innerHTML = html; }
 
 function triggerDemoSimulation(type) {
     const ok = '<span class="text-emerald-400">NORMAL</span>';
@@ -195,55 +196,55 @@ function triggerDemoSimulation(type) {
 
 async function pollFirebaseAlerts() {
     try {
-        const res = await fetch(FIREBASE_ALERT_URL + '?t=' + Date.now());
-        if (!res.ok) throw new Error('HTTP ' + res.status);
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 4000);
+        let res;
+        try {
+            res = await fetch(FIREBASE_ALERT_URL + '?_=' + Date.now(), {
+                method: 'GET', cache: 'no-store', signal: controller.signal
+            });
+        } finally {
+            clearTimeout(timeoutId);
+        }
+        if (!res.ok) throw new Error('Firebase HTTP ' + res.status);
         const data = await res.json();
-        if (typeof data !== 'object' || Array.isArray(data)) throw new Error('Unexpected Firebase data format');
 
         if ($('firebaseSyncStatus')) {
             $('firebaseSyncStatus').innerHTML = '<i class="fa-solid fa-database text-brand-success mr-1.5"></i>CLOUD TELEMETRY: <span class="text-brand-success font-bold">CONNECTED</span>';
         }
-
         if (!data) return;
 
-        if ($('liveSmokeVal') && data.smoke !== undefined) {
-            $('liveSmokeVal').innerText = data.smoke;
-        }
-        if ($('heroSmokeReadout') && data.smoke !== undefined) {
-            $('heroSmokeReadout').innerText = data.status === 'ACTIVE' ? 'ALERT' : 'CLEAR';
-            $('heroSmokeReadout').className = data.status === 'ACTIVE' ? 'text-brand-fire' : 'text-emerald-400';
-        }
-        if ($('liveFlameVal') && data.type) {
-            const hasFlame = String(data.type).toUpperCase().includes('FLAME') || String(data.type).toUpperCase().includes('FIRE');
-            $('liveFlameVal').innerText = (data.status === 'ACTIVE' && hasFlame) ? 'DETECTED' : 'CLEAR';
-            $('liveFlameVal').className = (data.status === 'ACTIVE' && hasFlame)
+        if ($('liveSmokeVal') && data.smoke !== undefined) $('liveSmokeVal').innerText = data.smoke;
+        const typeText = String(data.type || '').toUpperCase();
+        const isFireAlert = data.status === 'ACTIVE' && /(FIRE|FLAME|SMOKE)/.test(typeText);
+        if ($('liveFlameVal')) {
+            $('liveFlameVal').innerText = (isFireAlert && /(FLAME|FIRE)/.test(typeText)) ? 'DETECTED' : 'CLEAR';
+            $('liveFlameVal').className = (isFireAlert && /(FLAME|FIRE)/.test(typeText))
                 ? 'text-xl font-orbitron font-bold text-brand-fire animate-pulse'
                 : 'text-xl font-orbitron font-bold text-emerald-400';
         }
 
-        const alertKey = `${data.id || ''}_${data.status || ''}_${data.type || ''}`;
+        const alertKey = String(data.id || '') + '_' + String(data.status || '') + '_' + typeText;
         if (alertKey === lastHandledAlertId) return;
         lastHandledAlertId = alertKey;
 
-        if (data.status === 'ACTIVE') {
+        if (isFireAlert) {
             const title = data.type || 'FIRE HAZARD DETECTED';
             const loc = data.location || 'Miniature Demo City - Zone A';
-            const desc = `Live ESP32 Sensor Alert (${title}) | MQ-2 Smoke Reading: ${data.smoke ?? '--'} | Time: ${data.time || 'LIVE'}`;
+            const desc = `Live ESP32 Sensor Alert (${title}) | MQ sensor reading: ${data.smoke ?? '--'} | Time: ${data.time || 'LIVE'}`;
 
-            $('dashFireStatus').innerHTML = `<span class="text-brand-fire font-bold animate-pulse">${esc(title)}</span>`;
-            if ($('heroSmokeReadout')) { $('heroSmokeReadout').innerText = 'ALERT'; $('heroSmokeReadout').className = 'text-brand-fire'; }
+            if ($('dashFireStatus')) $('dashFireStatus').innerHTML = `<span class="text-brand-fire font-bold animate-pulse">${esc(title)}</span>`;
+            if ($('heroSmokeReadout')) {
+                $('heroSmokeReadout').innerText = 'ALERT';
+                $('heroSmokeReadout').className = 'text-brand-fire';
+            }
             setBanner('bg-red-950/90 border-b border-brand-fire/50', 'bg-brand-fire', `STATUS: <span class="text-brand-fire font-bold tracking-wider">${esc(title)} AT ${esc(loc.toUpperCase())}</span>`);
-
             openEmergencyModal('FIRE', title, loc, desc);
             playBeep(900, 0.45);
 
             initialFeedItems.unshift({
-                id: String(data.id || Date.now()),
-                type: 'FIRE',
-                title: title,
-                location: loc,
-                time: data.time || 'Just now',
-                status: 'LIVE ESP32 ALERT'
+                id: String(data.id || Date.now()), type: 'FIRE', title,
+                location: loc, time: data.time || 'Just now', status: 'LIVE ESP32 ALERT'
             });
             if (initialFeedItems.length > 8) initialFeedItems.pop();
             renderGlobalFeed();
@@ -251,7 +252,6 @@ async function pollFirebaseAlerts() {
             triggerDemoSimulation('NORMAL');
         }
     } catch (err) {
-        console.error('Firebase alert polling failed:', err);
         if ($('firebaseSyncStatus')) {
             $('firebaseSyncStatus').innerHTML = '<i class="fa-solid fa-database text-amber-400 mr-1.5"></i>CLOUD TELEMETRY: <span class="text-amber-400">OFFLINE</span>';
             $('firebaseSyncStatus').title = err.message || String(err);
@@ -261,10 +261,11 @@ async function pollFirebaseAlerts() {
 
 triggerDemoSimulation('NORMAL');
 pollFirebaseAlerts();
-setInterval(pollFirebaseAlerts, 2500);
+setInterval(pollFirebaseAlerts, 1000);
 
 /* ================= MODALS ================= */
 function openEmergencyModal(type, title, loc, desc) {
+    if (!$('emergencyModal') || !$('emergencyModalTitle')) return;
     const fire = type === 'FIRE', t = $('emergencyModalTitle');
     t.innerText = title; $('emergencyModalLoc').innerText = loc; $('emergencyModalTime').innerText = new Date().toLocaleTimeString() + ' IST';
     if (desc) $('emergencyModalDesc').innerText = '"' + desc + '"';
@@ -273,13 +274,13 @@ function openEmergencyModal(type, title, loc, desc) {
     t.className = `font-orbitron font-black text-2xl ${fire ? 'text-brand-fire' : 'text-brand-flood'}`;
     $('emergencyModal').classList.remove('hidden');
 }
-const closeEmergencyModal = () => $('emergencyModal').classList.add('hidden');
+const closeEmergencyModal = () => { if ($('emergencyModal')) $('emergencyModal').classList.add('hidden'); };
 const openAccountModal = () => $('accountModal').classList.remove('hidden');
 const closeAccountModal = () => $('accountModal').classList.add('hidden');
 const openShareModal = () => { $('shareUrlInput').value = location.origin + '/#alerts'; $('shareModal').classList.remove('hidden'); };
 const closeShareModal = () => $('shareModal').classList.add('hidden');
-function copyShareUrl() { const i = $('shareUrlInput'); i.select(); (navigator.clipboard ? navigator.clipboard.writeText(i.value) : Promise.resolve(document.execCommand('copy'))).then(() => { alert('Emergency Alert Link copied to clipboard!'); closeShareModal(); }); }
-function toggleMobileMenu() { const m = $('mobileMenu'), h = m.classList.toggle('hidden'); $('mobileMenuBtn').setAttribute('aria-expanded', String(!h)); }
+function copyShareUrl() { const i = $('shareUrlInput'); if (!i) return; i.select(); (navigator.clipboard ? navigator.clipboard.writeText(i.value) : Promise.resolve(document.execCommand('copy'))).then(() => { alert('Emergency Alert Link copied to clipboard!'); closeShareModal(); }); }
+function toggleMobileMenu() { const m = $('mobileMenu'); if (!m) return; const h = m.classList.toggle('hidden'); if ($('mobileMenuBtn')) $('mobileMenuBtn').setAttribute('aria-expanded', String(!h)); }
 function scrollToSection(id) { const e = $(id); if (e) e.scrollIntoView({ behavior: 'smooth' }); }
 
 /* ================= ACCOUNT: COUNTRY -> CITY DROPDOWNS ================= */
@@ -302,21 +303,22 @@ const COUNTRY_CITIES = {
     "Brazil": ["Sao Paulo", "Rio de Janeiro", "Brasilia"],
     "South Africa": ["Johannesburg", "Cape Town", "Durban"]
 };
-function populateCities() { $('accCity').innerHTML = (COUNTRY_CITIES[$('accCountry').value] || []).map(n => `<option value="${n}">${n}</option>`).join(''); }
-$('accCountry').innerHTML = Object.keys(COUNTRY_CITIES).map(n => `<option value="${n}">${n}</option>`).join(''); $('accCountry').value = 'India'; populateCities();
+function populateCities() { if (!$('accCountry') || !$('accCity')) return; $('accCity').innerHTML = (COUNTRY_CITIES[$('accCountry').value] || []).map(n => `<option value="${n}">${n}</option>`).join(''); }
+if ($('accCountry')) { $('accCountry').innerHTML = Object.keys(COUNTRY_CITIES).map(n => `<option value="${n}">${n}</option>`).join(''); $('accCountry').value = 'India'; populateCities(); }
 function saveAccountPreferences(e) {
     e.preventDefault();
+    if (!$('accName') || !$('accCity') || !$('accCountry')) return;
     const name = $('accName').value, city = $('accCity').value, country = $('accCountry').value;
-    $('savedLocationDisplay').innerText = `LOCATION: ${city.toUpperCase()}, ${country.toUpperCase()}`;
-    $('userBtnLabel').innerText = name.split(' ')[0].toUpperCase();
+    if ($('savedLocationDisplay')) $('savedLocationDisplay').innerText = `LOCATION: ${city.toUpperCase()}, ${country.toUpperCase()}`;
+    if ($('userBtnLabel')) $('userBtnLabel').innerText = name.split(' ')[0].toUpperCase();
     closeAccountModal(); alert(`Account saved for ${name}. Preferred Location: ${city}, ${country}`);
 }
 
 /* ================= GALLERY ================= */
-function handleImageUpload(ev, key) { const f = ev.target.files[0]; if (!f) return; const r = new FileReader(); r.onload = e => { $('img-' + key).src = e.target.result; }; r.readAsDataURL(f); }
-function editCaption(key) { const c = prompt('Enter custom photo caption:'); if (c) $('cap-' + key).innerText = c; }
-function openLightbox(key) { $('lightboxImg').src = $('img-' + key).src; $('lightboxCaption').innerText = $('cap-' + key).innerText; $('lightboxModal').classList.remove('hidden'); }
-const closeLightbox = () => $('lightboxModal').classList.add('hidden');
+function handleImageUpload(ev, key) { const f = ev.target.files[0], img = $('img-' + key); if (!f || !img) return; const r = new FileReader(); r.onload = e => { img.src = e.target.result; }; r.readAsDataURL(f); }
+function editCaption(key) { const c = prompt('Enter custom photo caption:'), el = $('cap-' + key); if (c && el) el.innerText = c; }
+function openLightbox(key) { const img = $('img-' + key); if (!$('lightboxImg') || !$('lightboxCaption') || !$('lightboxModal') || !img) return; $('lightboxImg').src = img.src; $('lightboxCaption').innerText = $('cap-' + key)?.innerText || ''; $('lightboxModal').classList.remove('hidden'); }
+const closeLightbox = () => { if ($('lightboxModal')) $('lightboxModal').classList.add('hidden'); };
 
 /* ================= AI CHATBOT ================= */
 const chatHistory = [];
@@ -326,21 +328,21 @@ const FALLBACK = [
     [/sensor|arduino|esp32|how.*work/i, "Bharat Astra reads smoke, flame and ultrasonic sensors with a microcontroller, compares them to thresholds, then raises an alert with a popup, buzzer and live feed."],
     [/hello|hi\b|hey/i, "Hi! I'm the Astra assistant. Ask me about fire safety, flood safety, or how this system works."]
 ];
-function toggleChat() { const p = $('chatPanel'); p.classList.toggle('hidden'); if (!p.classList.contains('hidden') && !$('chatLog').children.length) addChatMsg("Hi! I'm the Astra AI assistant. Ask me about fire or flood safety, or how Bharat Astra works.", 'bot'); }
+function toggleChat() { const p = $('chatPanel'); if (!p) return; p.classList.toggle('hidden'); if (!p.classList.contains('hidden') && $('chatLog') && !$('chatLog').children.length) addChatMsg("Hi! I'm the Astra AI assistant. Ask me about fire or flood safety, or how Bharat Astra works.", 'bot'); }
 function addChatMsg(text, who) {
+    if (!$('chatLog')) return { textContent: '' };
     const d = document.createElement('div');
     d.className = who === 'user' ? 'ml-8 p-2 rounded-lg bg-brand-cyan/20 text-white' : 'mr-8 p-2 rounded-lg bg-slate-900 border border-slate-800 text-slate-200';
     d.textContent = text; $('chatLog').appendChild(d); $('chatLog').scrollTop = $('chatLog').scrollHeight; return d;
 }
 async function sendChat() {
-    const inp = $('chatInput'), text = inp.value.trim(); if (!text) return;
+    const inp = $('chatInput'); if (!inp) return; const text = inp.value.trim(); if (!text) return;
     inp.value = ''; addChatMsg(text, 'user'); chatHistory.push({ role: 'user', content: text });
     const typing = addChatMsg('...', 'bot'); let reply;
     try {
         const res = await fetch('/api/chat', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ messages: chatHistory.slice(-10) }) });
         if (!res.ok) throw 0;
         const data = await res.json();
-        if (typeof data !== 'object' || Array.isArray(data)) throw new Error('Unexpected Firebase data format');
         reply = data.reply || data.error;
     } catch (e) {
         const h = FALLBACK.find(([re]) => re.test(text));
@@ -348,7 +350,3 @@ async function sendChat() {
     }
     typing.textContent = reply; chatHistory.push({ role: 'assistant', content: reply });
 }
-
-
-
-
