@@ -15,7 +15,6 @@
         tailwind.config = { darkMode: 'class', theme: { extend: { colors: { brand: { bg: '#060913', cyan: '#00f2fe', fire: '#ff3b30', fireOrange: '#ff9500', flood: '#007aff', success: '#34c759' } }, fontFamily: { orbitron: ['Orbitron', 'sans-serif'], rajdhani: ['Rajdhani', 'sans-serif'], sans: ['Inter', 'sans-serif'] }, animation: { 'spin-slow': 'spin 12s linear infinite', 'radar-sweep': 'radar 4s linear infinite' }, keyframes: { radar: { '0%': { transform: 'rotate(0deg)' }, '100%': { transform: 'rotate(360deg)' } } } } } }
     </script>
     <style>
-        /* Emergency flash mode when flood/tsunami is detected */
         body.flood-emergency-mode {
             background-color: #3b0a0a !important;
         }
@@ -180,6 +179,28 @@
             </div>
         </section>
 
+        <!-- PROBLEM -->
+        <section id="problem" class="py-20 border-b border-slate-800/80">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-12">
+                <div class="text-center max-w-3xl mx-auto space-y-3">
+                    <span class="tag bg-brand-fire/10 border border-brand-fire/30 text-brand-fire">MISSION SCOPE</span>
+                    <h2 class="text-3xl sm:text-5xl font-orbitron font-black text-white">MONITORING TARGETS</h2>
+                </div>
+                <div id="problemCards" class="grid grid-cols-1 md:grid-cols-2 gap-8"></div>
+            </div>
+        </section>
+
+        <!-- SOLUTION -->
+        <section id="solution" class="py-20 border-b border-slate-800/80 bg-slate-950/40">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-12">
+                <div class="text-center max-w-3xl mx-auto space-y-3">
+                    <span class="tag bg-brand-cyan/10 border border-brand-cyan/30 text-brand-cyan">SYSTEM ARCHITECTURE</span>
+                    <h2 class="text-3xl sm:text-5xl font-orbitron font-black text-white">END-TO-END WORKFLOW</h2>
+                </div>
+                <div id="flowSteps" class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4 text-center font-mono"></div>
+            </div>
+        </section>
+
         <!-- DASHBOARD -->
         <section id="dashboard" class="py-20 border-b border-slate-800/80">
             <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -206,15 +227,15 @@
                                 class="font-orbitron text-sm font-bold text-emerald-400 block">NORMAL</span></div>
                     </div>
 
-                    <!-- MPU6050 Live Acceleration Display Card -->
+                    <!-- MPU6050 Live Telemetry Card -->
                     <div class="p-4 rounded-xl bg-slate-900/90 border border-slate-800 text-xs font-mono space-y-2">
-                        <div class="text-brand-cyan font-bold font-orbitron">SENSOR: mpu6050 (WAVE & FLOOD TELEMETRY)
+                        <div class="text-brand-cyan font-bold font-orbitron">SENSOR: MPU6050 (BUOY TILT & FLOOD TELEMETRY)
                         </div>
                         <div class="grid grid-cols-2 gap-4">
-                            <div><span class="text-slate-500 block">ACCEL X</span><span id="accelXVal"
-                                    class="text-base font-orbitron font-bold text-white">0.00 m/s²</span></div>
-                            <div><span class="text-slate-500 block">ACCEL Y</span><span id="accelYVal"
-                                    class="text-base font-orbitron font-bold text-white">0.00 m/s²</span></div>
+                            <div><span class="text-slate-500 block">TILT ANGLE (ROLL)</span><span id="tiltAngleVal"
+                                    class="text-base font-orbitron font-bold text-white">0.00°</span></div>
+                            <div><span class="text-slate-500 block">EVENT COUNTER</span><span id="eventIdVal"
+                                    class="text-base font-orbitron font-bold text-white">0</span></div>
                         </div>
                     </div>
 
@@ -236,6 +257,35 @@
             </div>
         </section>
 
+        <!-- LIVE FOOTAGE -->
+        <section id="live-footage" class="py-20 border-b border-slate-800/80 bg-slate-950/40">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-8">
+                <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                    <div>
+                        <span class="tag bg-brand-cyan/10 border border-brand-cyan/30 text-brand-cyan">OVERHEAD FEED</span>
+                        <h2 class="text-3xl sm:text-4xl font-orbitron font-black text-white mt-2">ESP32-CAM LIVE STREAM</h2>
+                    </div>
+                    <div class="flex gap-2 font-orbitron text-xs">
+                        <button onclick="configureEsp32CamUrl()" class="px-4 py-2.5 rounded-lg bg-slate-800 border border-slate-600 text-slate-200 hover:border-brand-cyan">SET STREAM URL</button>
+                        <button onclick="openEsp32CamWindow()" class="px-4 py-2.5 rounded-lg bg-brand-cyan text-slate-950 font-bold">OPEN LIVE CAM (L)</button>
+                    </div>
+                </div>
+                <div id="galleryGrid" class="grid grid-cols-1 md:grid-cols-3 gap-6"></div>
+            </div>
+        </section>
+
+        <!-- PROTOTYPE -->
+        <section id="prototype" class="py-20 border-b border-slate-800/80">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-12">
+                <div class="text-center max-w-3xl mx-auto space-y-3">
+                    <span class="tag bg-brand-cyan/10 border border-brand-cyan/30 text-brand-cyan">ENGINEERING</span>
+                    <h2 class="text-3xl sm:text-5xl font-orbitron font-black text-white">HARDWARE & ROADMAP</h2>
+                </div>
+                <div id="hwGrid" class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4 font-mono text-xs"></div>
+                <div id="roadmapGrid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 font-mono text-xs"></div>
+            </div>
+        </section>
+
         <!-- ALERTS -->
         <section id="alerts" class="py-20 border-b border-slate-800/80 bg-slate-950/40">
             <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-12">
@@ -254,11 +304,19 @@
                             class="text-xs font-mono text-brand-cyan px-2.5 py-1 rounded bg-brand-cyan/10 border border-brand-cyan/30">LOCATION:
                             NEW DELHI, INDIA</span>
                     </div>
-                    <div id="localAlertContainer"
-                        class="p-4 rounded-xl bg-slate-900/80 border border-slate-800 text-sm font-mono flex items-center justify-between space-y-2">
-                        <span>Status: No current emergency alerts recorded in region.</span>
-                    </div>
+                    <div id="globalFeedList" class="space-y-3"></div>
                 </div>
+            </div>
+        </section>
+
+        <!-- TEAM -->
+        <section id="team" class="py-20 border-b border-slate-800/80">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-12">
+                <div class="text-center max-w-3xl mx-auto space-y-3">
+                    <span class="tag bg-brand-cyan/10 border border-brand-cyan/30 text-brand-cyan">INNOVATORS</span>
+                    <h2 class="text-3xl sm:text-5xl font-orbitron font-black text-white">PROJECT TEAM</h2>
+                </div>
+                <div id="teamGrid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-6"></div>
             </div>
         </section>
     </main>
@@ -267,51 +325,75 @@
         <p>© 2026 BHARAT ASTRA PROJECT. All rights reserved.</p>
     </footer>
 
-    <!-- MPU6050 Pop-up Alert Listener Script -->
-    <script>
-        const FIREBASE_ALERT_URL = "https://bharatastra-154d9-default-rtdb.asia-southeast1.firebasedatabase.app/alert.json";
-        let lastNotifiedId = null;
+    <!-- EMERGENCY MODAL -->
+    <div id="emergencyModal" class="hidden fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-4">
+        <div id="emergencyModalCard" class="w-full max-w-lg glass-panel p-6 sm:p-8 rounded-2xl border-2 space-y-6 relative">
+            <div class="flex items-center gap-4">
+                <div id="emergencyModalIcon" class="w-12 h-12 rounded-xl flex items-center justify-center text-2xl">
+                    <i class="fa-solid fa-triangle-exclamation"></i>
+                </div>
+                <div>
+                    <div class="text-xs font-mono text-slate-400">AUTOMATED SENSOR ALERT</div>
+                    <h3 id="emergencyModalTitle" class="font-orbitron font-black text-2xl">FLOOD DETECTED</h3>
+                </div>
+            </div>
+            <div class="space-y-2 font-mono text-xs bg-slate-900/90 p-4 rounded-xl border border-slate-800">
+                <div class="flex justify-between"><span class="text-slate-400">LOCATION:</span><span id="emergencyModalLoc" class="text-white font-bold">Buoy Station Zone A</span></div>
+                <div class="flex justify-between"><span class="text-slate-400">TIMESTAMP:</span><span id="emergencyModalTime" class="text-brand-cyan">00:00:00 IST</span></div>
+                <p id="emergencyModalDesc" class="text-slate-300 pt-2 border-t border-slate-800 italic">"Tilt threshold exceeded."</p>
+            </div>
+            <div class="flex justify-end gap-3 font-orbitron text-xs font-bold">
+                <button onclick="closeEmergencyModal()" class="px-6 py-3 rounded-xl bg-brand-cyan text-slate-950">ACKNOWLEDGE & DISMISS</button>
+            </div>
+        </div>
+    </div>
 
-        async function pollMpu6050Telemetry() {
-            try {
-                let response = await fetch(FIREBASE_ALERT_URL);
-                if (!response.ok) return;
-                let data = await response.json();
-                if (!data) return;
+    <!-- ACCOUNT MODAL -->
+    <div id="accountModal" class="hidden fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-4">
+        <form onsubmit="saveAccountPreferences(event)" class="w-full max-w-md glass-panel p-6 rounded-2xl border border-brand-cyan/30 space-y-4 font-mono text-xs">
+            <div class="flex justify-between items-center border-b border-slate-800 pb-3">
+                <h3 class="font-orbitron font-bold text-base text-white">OPERATOR PROFILE</h3>
+                <button type="button" onclick="closeAccountModal()" class="text-slate-400 hover:text-white"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <div><label class="block text-slate-400 mb-1">NAME</label><input id="accName" type="text" value="Commander" class="w-full p-2.5 rounded-lg bg-slate-900 border border-slate-700 text-white"></div>
+            <div><label class="block text-slate-400 mb-1">COUNTRY</label><select id="accCountry" onchange="populateCities()" class="w-full p-2.5 rounded-lg bg-slate-900 border border-slate-700 text-white"></select></div>
+            <div><label class="block text-slate-400 mb-1">CITY</label><select id="accCity" class="w-full p-2.5 rounded-lg bg-slate-900 border border-slate-700 text-white"></select></div>
+            <button type="submit" class="w-full py-3 rounded-xl bg-brand-cyan text-slate-950 font-orbitron font-bold">SAVE PREFERENCES</button>
+        </form>
+    </div>
 
-                const status = data.status || "CLEAR";
-                const hazardType = data.type || "NORMAL";
-                const accelX = Number(data.waveAccelX || 0);
-                const accelY = Number(data.waveAccelY || 0);
+    <!-- SHARE MODAL -->
+    <div id="shareModal" class="hidden fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-4">
+        <div class="w-full max-w-md glass-panel p-6 rounded-2xl border border-brand-cyan/30 space-y-4 font-mono text-xs">
+            <div class="flex justify-between items-center">
+                <h3 class="font-orbitron font-bold text-base text-white">SHARE ALERT</h3>
+                <button onclick="closeShareModal()" class="text-slate-400 hover:text-white"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <input id="shareUrlInput" type="text" readonly class="w-full p-2.5 rounded-lg bg-slate-900 border border-slate-700 text-brand-cyan">
+            <button onclick="copyShareUrl()" class="w-full py-3 rounded-xl bg-brand-cyan text-slate-950 font-orbitron font-bold">COPY LINK</button>
+        </div>
+    </div>
 
-                // Update UI elements if present
-                if (document.getElementById("accelXVal")) {
-                    document.getElementById("accelXVal").innerText = accelX.toFixed(2) + " m/s²";
-                }
-                if (document.getElementById("accelYVal")) {
-                    document.getElementById("accelYVal").innerText = accelY.toFixed(2) + " m/s²";
-                }
-
-                // Check for rigorous shaking / flood / tsunami levels
-                const isSevereFlood = hazardType.includes("FLOOD") || hazardType.includes("TSUNAMI") || Math.abs(accelX) > 6.0 || Math.abs(accelY) > 6.0;
-
-                if (status === "ACTIVE" && isSevereFlood) {
-                    if (data.id !== lastNotifiedId) {
-                        lastNotifiedId = data.id;
-                        alert("🚨 EMERGENCY: Flood detected by mpu6050! Rigorous shaking / tsunami level motion active!");
-                    }
-                    document.body.classList.add("flood-emergency-mode");
-                } else {
-                    document.body.classList.remove("flood-emergency-mode");
-                }
-            } catch (err) {
-                // Silently handle fetch connection drops
-            }
-        }
-
-        // Poll Firebase telemetry every 2 seconds
-        setInterval(pollMpu6050Telemetry, 2000);
-    </script>
+    <!-- FLOATING AI CHATBOT -->
+    <div class="fixed bottom-5 right-5 z-50 flex flex-col items-end">
+        <div id="chatPanel" class="hidden mb-3 w-80 sm:w-96 glass-panel rounded-2xl border border-brand-cyan/40 overflow-hidden shadow-2xl flex flex-col">
+            <div class="p-3 bg-slate-900/90 border-b border-slate-800 flex items-center justify-between">
+                <div class="flex items-center gap-2">
+                    <i class="fa-solid fa-robot text-brand-cyan"></i>
+                    <span class="font-orbitron font-bold text-xs text-white">ASTRA AI ASSISTANT</span>
+                </div>
+                <button onclick="toggleChat()" class="text-slate-400 hover:text-white"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <div id="chatLog" class="p-3 h-64 overflow-y-auto space-y-2 font-sans text-xs bg-slate-950/70"></div>
+            <div class="p-2 bg-slate-900 border-t border-slate-800 flex gap-2">
+                <input id="chatInput" type="text" placeholder="Ask about buoy status or safety..." onkeydown="if(event.key==='Enter')sendChat()" class="flex-1 px-3 py-2 rounded-lg bg-slate-950 border border-slate-700 text-xs text-white focus:outline-none focus:border-brand-cyan">
+                <button onclick="sendChat()" class="px-3 py-2 rounded-lg bg-brand-cyan text-slate-950 font-orbitron font-bold text-xs"><i class="fa-solid fa-paper-plane"></i></button>
+            </div>
+        </div>
+        <button onclick="toggleChat()" class="w-14 h-14 rounded-full bg-gradient-to-r from-brand-cyan to-blue-600 text-slate-950 shadow-[0_0_20px_rgba(0,242,254,0.5)] flex items-center justify-center text-xl hover:scale-105 transition-transform" aria-label="Toggle AI Assistant">
+            <i class="fa-solid fa-comment-dots"></i>
+        </button>
+    </div>
 
     <script src="web.js"></script>
 </body>

@@ -118,9 +118,9 @@ if ($('problemCards')) {
 
 if ($('flowSteps')) {
     $('flowSteps').innerHTML = [
-        ['fa-satellite', 'SATELLITE MOVEMENT', 'Platform moves over miniature zone'], ['fa-microchip', 'SENSOR DATA', 'MPU6050 wave acceleration readings'],
-        ['fa-memory', 'MICROCONTROLLER', 'ESP32 local embedded processing'], ['fa-chart-line', 'CONDITION ANALYSIS', 'Check against wave/flood thresholds'],
-        ['fa-triangle-exclamation', 'FLOOD / WAVE DETECT', 'State classification established'], ['fa-bell', 'EMERGENCY ALERT', 'Dashboard popup, siren & web sync']
+        ['fa-satellite', 'SATELLITE MOVEMENT', 'Platform moves over miniature zone'], ['fa-microchip', 'SENSOR DATA', 'MPU6050 buoy tilt readings'],
+        ['fa-memory', 'MICROCONTROLLER', 'ESP32 local embedded processing'], ['fa-chart-line', 'CONDITION ANALYSIS', 'Check against 75.0° tilt threshold'],
+        ['fa-triangle-exclamation', 'FLOOD / WAVE DETECT', 'State classification established'], ['fa-bell', 'EMERGENCY ALERT', 'Dashboard popup, buzzer & web sync']
     ].map(([ic, t, d], i) => `<div class="p-4 rounded-xl bg-slate-900/80 border ${i == 5 ? 'border-brand-flood/50 bg-brand-flood/10' : 'border-slate-700'} hover:border-brand-cyan transition-all">
       <div class="w-8 h-8 mx-auto mb-2 rounded-full ${i == 5 ? 'bg-brand-flood text-white' : 'bg-brand-cyan/20 text-brand-cyan'} flex items-center justify-center text-xs font-bold font-orbitron">0${i + 1}</div>
       <i class="fa-solid ${ic} text-2xl ${i >= 4 ? 'text-brand-flood' : 'text-slate-300'} mb-2"></i><div class="text-xs font-bold text-white">${t}</div><p class="text-[10px] text-slate-400 mt-1">${d}</p></div>`).join('');
@@ -131,7 +131,6 @@ if ($('galleryGrid')) {
     $('galleryGrid').innerHTML = Object.entries(gallery).map(([k, [txt, col, cap]]) => `<div class="glass-panel p-4 rounded-xl space-y-3 group">
       <div class="relative h-48 rounded-lg bg-slate-950 overflow-hidden border border-slate-800"><img id="img-${k}" src="https://placehold.co/600x400/0a1120/${col}?text=${txt}" alt="${cap}" class="w-full h-full object-cover">
       <div class="absolute inset-0 bg-slate-950/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
-       <button onclick="openLightbox('${k}')" class="p-2 rounded-lg bg-slate-900 text-brand-cyan border border-brand-cyan"><i class="fa-solid fa-expand"></i></button>
        <label class="cursor-pointer p-2 rounded-lg bg-slate-900 text-white border border-slate-700"><i class="fa-solid fa-camera"></i><input type="file" accept="image/*" class="hidden" onchange="handleImageUpload(event,'${k}')"></label></div></div>
       <div class="text-xs font-mono space-y-1"><div class="text-slate-200 font-bold" id="cap-${k}">${cap}</div><button onclick="editCaption('${k}')" class="text-[10px] text-slate-500 hover:text-brand-cyan underline">Edit Caption</button></div></div>`).join('');
 }
@@ -155,13 +154,16 @@ if ($('roadmapGrid')) {
 }
 
 /* ================= DEMO SIMULATION + LIVE FIREBASE TELEMETRY ================= */
-const FIREBASE_ALERT_URL = 'https://bharatastra-154d9-default-rtdb.asia-southeast1.firebasedatabase.app/alert.json';
-let lastHandledAlertId = null;
+// Matches your ESP32 path: /alerts/latest.json
+const FIREBASE_ALERT_URL = 'https://bharatastra-154d9-default-rtdb.asia-southeast1.firebasedatabase.app/alerts/latest.json';
+let isInitialFetch = true;
+let lastHandledEventKey = null;
+let latestTelemetry = { active: false, angle: 0, eventId: 0 };
 
 const initialFeedItems = [
-    { id: '1', type: 'FIRE', title: 'FIRE DEMO ALERT', location: 'Miniature City Zone A', time: '10 mins ago', status: 'ACTIVE SIMULATION' },
-    { id: '2', type: 'FLOOD', title: 'FLOOD / TSUNAMI WAVE ALERT', location: 'Buoy Station Zone A', time: '25 mins ago', status: 'ACTIVE SIMULATION' },
-    { id: '3', type: 'FLOOD', title: 'MPU6050 MOTION TEST', location: 'Buoy Station Zone A', time: '1 hour ago', status: 'RESOLVED' }
+    { id: '1', type: 'FIRE', title: 'FIRE DEMO ALERT', location: 'Miniature City Zone A', time: '10 mins ago', status: 'STANDBY' },
+    { id: '2', type: 'FLOOD', title: 'FLOOD / TSUNAMI WAVE ALERT', location: 'Buoy Station Zone A', time: '25 mins ago', status: 'STANDBY' },
+    { id: '3', type: 'FLOOD', title: 'MPU6050 TILT CALIBRATION', location: 'Buoy Station Zone A', time: '1 hour ago', status: 'RESOLVED' }
 ];
 
 function renderGlobalFeed() {
@@ -185,6 +187,7 @@ function setBanner(cls, dot, html) {
 
 function triggerDemoSimulation(type) {
     const ok = '<span class="text-emerald-400">NORMAL</span>';
+    document.body.classList.remove("flood-emergency-mode");
     if (type === 'FIRE') {
         if ($('dashFireStatus')) $('dashFireStatus').innerHTML = '<span class="text-brand-fire font-bold animate-pulse">SMOKE ALERT</span>';
         if ($('dashFloodStatus')) $('dashFloodStatus').innerHTML = ok;
@@ -192,11 +195,12 @@ function triggerDemoSimulation(type) {
         setBanner('bg-red-950/90 border-b border-brand-fire/50', 'bg-brand-fire', 'STATUS: <span class="text-brand-fire font-bold tracking-wider">ACTIVE FIRE WARNING DETECTED IN DEMO AREA</span>');
         openEmergencyModal('FIRE', 'FIRE HAZARD DETECTED', 'Miniature Fire Demonstration Area', 'Smoke sensor alert detected. Buzzer triggered.'); playBeep(900, .4);
     } else if (type === 'FLOOD') {
+        document.body.classList.add("flood-emergency-mode");
         if ($('dashFireStatus')) $('dashFireStatus').innerHTML = ok;
-        if ($('dashFloodStatus')) $('dashFloodStatus').innerHTML = '<span class="text-brand-flood font-bold animate-pulse">FLOOD / TSUNAMI DETECTED</span>';
+        if ($('dashFloodStatus')) $('dashFloodStatus').innerHTML = '<span class="text-brand-flood font-bold animate-pulse">FLOOD / TILT DETECTED</span>';
         if ($('heroUltrasonicReadout')) { $('heroUltrasonicReadout').innerText = 'FLOOD'; $('heroUltrasonicReadout').className = 'text-brand-flood'; }
-        setBanner('bg-blue-950/90 border-b border-brand-flood/50', 'bg-brand-flood', 'STATUS: <span class="text-brand-flood font-bold tracking-wider">ACTIVE FLOOD / TSUNAMI LEVEL MOTION DETECTED BY MPU6050</span>');
-        openEmergencyModal('FLOOD', 'FLOOD DETECTED', 'Buoy Station Zone A', 'Rigorous MPU6050 shaking / tsunami level motion active!'); playBeep(600, .4);
+        setBanner('bg-blue-950/90 border-b border-brand-flood/50', 'bg-brand-flood', 'STATUS: <span class="text-brand-flood font-bold tracking-wider">ACTIVE FLOOD / TILT DETECTED BY MPU6050</span>');
+        openEmergencyModal('FLOOD', 'FLOOD DETECTED', 'Buoy Station Zone A', 'MPU6050 tilt threshold (75.0°) exceeded!'); playBeep(600, .4);
     } else {
         if ($('dashFireStatus')) $('dashFireStatus').innerHTML = ok;
         if ($('dashFloodStatus')) $('dashFloodStatus').innerHTML = ok;
@@ -216,64 +220,66 @@ async function pollFirebaseAlerts() {
             $('firebaseSyncStatus').innerHTML = '<i class="fa-solid fa-database text-brand-success mr-1.5"></i>CLOUD TELEMETRY: <span class="text-brand-success font-bold">CONNECTED</span>';
         }
 
-        if (!data) return;
-
-        // Update MPU6050 wave acceleration live values on UI
-        const accelX = Number(data.waveAccelX || 0);
-        const accelY = Number(data.waveAccelY || 0);
-        if ($('accelXVal')) $('accelXVal').innerText = accelX.toFixed(2) + ' m/s²';
-        if ($('accelYVal')) $('accelYVal').innerText = accelY.toFixed(2) + ' m/s²';
-
-        if ($('liveSmokeVal') && data.smoke !== undefined) {
-            $('liveSmokeVal').innerText = data.smoke;
+        if (!data) {
+            isInitialFetch = false;
+            return;
         }
 
-        const alertKey = `${data.id || ''}_${data.status || ''}_${data.type || ''}`;
-        if (alertKey === lastHandledAlertId) return;
-        lastHandledAlertId = alertKey;
+        // Read fields sent by your ESP32: { active: bool, angle: float, eventId: int, device: string }
+        const isActive = Boolean(data.active);
+        const angle = Number(data.angle || 0);
+        const eventId = data.eventId || 0;
+        const device = data.device || 'BharatAstra MPU6050';
 
-        const isSevereFlood = (data.type && (data.type.includes('FLOOD') || data.type.includes('TSUNAMI'))) || Math.abs(accelX) > 6.0 || Math.abs(accelY) > 6.0;
+        latestTelemetry = { active: isActive, angle, eventId, device };
 
-        if (data.status === 'ACTIVE') {
-            const title = data.type || (isSevereFlood ? 'FLOOD DETECTED' : 'HIGH WAVE ALERT');
-            const loc = data.location || 'Buoy Station Zone A';
-            const desc = `Live ESP32 MPU6050 Alert (${title}) | Accel X: ${accelX.toFixed(2)} m/s² | Accel Y: ${accelY.toFixed(2)} m/s² | Time: ${data.time || 'LIVE'}`;
+        if ($('tiltAngleVal')) $('tiltAngleVal').innerText = angle.toFixed(2) + '°';
+        if ($('eventIdVal')) $('eventIdVal').innerText = eventId;
 
-            if (isSevereFlood) {
-                if ($('dashFloodStatus')) $('dashFloodStatus').innerHTML = `<span class="text-brand-flood font-bold animate-pulse">${esc(title)}</span>`;
-                if ($('heroUltrasonicReadout')) { $('heroUltrasonicReadout').innerText = 'FLOOD'; $('heroUltrasonicReadout').className = 'text-brand-flood'; }
-                setBanner('bg-blue-950/90 border-b border-brand-flood/50', 'bg-brand-flood', `STATUS: <span class="text-brand-flood font-bold tracking-wider">FLOOD DETECTED BY MPU6050 AT ${esc(loc.toUpperCase())}</span>`);
+        const currentEventKey = `${eventId}_${isActive}`;
 
-                // Browser Pop-up Alert when rigorous shaking / flood / tsunami level is reached
-                alert("🚨 EMERGENCY: Flood detected by mpu6050! Rigorous wave shaking or tsunami levels active!");
-                document.body.classList.add("flood-emergency-mode");
-
-                openEmergencyModal('FLOOD', title, loc, desc);
-                playBeep(600, 0.45);
-            } else {
-                if ($('dashFireStatus')) $('dashFireStatus').innerHTML = `<span class="text-brand-fire font-bold animate-pulse">${esc(title)}</span>`;
-                setBanner('bg-red-950/90 border-b border-brand-fire/50', 'bg-brand-fire', `STATUS: <span class="text-brand-fire font-bold tracking-wider">${esc(title)} AT ${esc(loc.toUpperCase())}</span>`);
-                openEmergencyModal('FIRE', title, loc, desc);
-                playBeep(900, 0.45);
+        // On initial page load, record existing state so old Firebase records don't trigger a popup on refresh
+        if (isInitialFetch) {
+            isInitialFetch = false;
+            lastHandledEventKey = currentEventKey;
+            if (!isActive) {
+                triggerDemoSimulation('NORMAL');
             }
+            return;
+        }
+
+        if (currentEventKey === lastHandledEventKey) return;
+        lastHandledEventKey = currentEventKey;
+
+        if (isActive) {
+            const desc = `Live ESP32 Alert (${device}) | Tilt Angle: ${angle.toFixed(2)}° | Event #${eventId}`;
+            document.body.classList.add("flood-emergency-mode");
+            if ($('dashFloodStatus')) $('dashFloodStatus').innerHTML = `<span class="text-brand-flood font-bold animate-pulse">FLOOD / TILT ALERT (${angle.toFixed(1)}°)</span>`;
+            if ($('heroUltrasonicReadout')) { $('heroUltrasonicReadout').innerText = 'FLOOD'; $('heroUltrasonicReadout').className = 'text-brand-flood'; }
+            setBanner('bg-blue-950/90 border-b border-brand-flood/50', 'bg-brand-flood', `STATUS: <span class="text-brand-flood font-bold tracking-wider">FLOOD / TILT ALERT DETECTED (${angle.toFixed(2)}°)</span>`);
+
+            openEmergencyModal('FLOOD', 'FLOOD / TILT DETECTED', 'Buoy Station Zone A', desc);
+            playBeep(600, 0.45);
 
             initialFeedItems.unshift({
-                id: String(data.id || Date.now()),
-                type: isSevereFlood ? 'FLOOD' : 'FIRE',
-                title: title,
-                location: loc,
-                time: data.time || 'Just now',
+                id: String(eventId || Date.now()),
+                type: 'FLOOD',
+                title: `BUOY TILT ALERT (${angle.toFixed(1)}°)`,
+                location: 'Buoy Station Zone A',
+                time: new Date().toLocaleTimeString(),
                 status: 'LIVE ESP32 ALERT'
             });
             if (initialFeedItems.length > 8) initialFeedItems.pop();
             renderGlobalFeed();
-        } else if (data.status === 'CLEAR') {
+        } else {
             document.body.classList.remove("flood-emergency-mode");
+            closeEmergencyModal();
             triggerDemoSimulation('NORMAL');
         }
     } catch (err) {
+        isInitialFetch = false;
         if ($('firebaseSyncStatus')) {
-            $('firebaseSyncStatus').innerHTML = '<i class="fa-solid fa-database text-amber-400 mr-1.5"></i>CLOUD TELEMETRY: <span class="text-amber-400">OFFLINE</span>';
+            $('firebaseSyncStatus').innerHTML = '<i class="fa-solid fa-database text-amber-400 mr-1.5"></i>CLOUD TELEMETRY: <span class="text-amber-400">WAITING FOR ESP32</span>';
         }
     }
 }
@@ -295,12 +301,15 @@ function openEmergencyModal(type, title, loc, desc) {
     t.className = `font-orbitron font-black text-2xl ${fire ? 'text-brand-fire' : 'text-brand-flood'}`;
     if ($('emergencyModal')) $('emergencyModal').classList.remove('hidden');
 }
-const closeEmergencyModal = () => { if ($('emergencyModal')) $('emergencyModal').classList.add('hidden'); };
+const closeEmergencyModal = () => {
+    if ($('emergencyModal')) $('emergencyModal').classList.add('hidden');
+    document.body.classList.remove("flood-emergency-mode");
+};
 const openAccountModal = () => { if ($('accountModal')) $('accountModal').classList.remove('hidden'); };
 const closeAccountModal = () => { if ($('accountModal')) $('accountModal').classList.add('hidden'); };
 const openShareModal = () => { if ($('shareUrlInput')) $('shareUrlInput').value = location.origin + '/#alerts'; if ($('shareModal')) $('shareModal').classList.remove('hidden'); };
 const closeShareModal = () => { if ($('shareModal')) $('shareModal').classList.add('hidden'); };
-function copyShareUrl() { const i = $('shareUrlInput'); if (!i) return; i.select(); (navigator.clipboard ? navigator.clipboard.writeText(i.value) : Promise.resolve(document.execCommand('copy'))).then(() => { alert('Emergency Alert Link copied to clipboard!'); closeShareModal(); }); }
+function copyShareUrl() { const i = $('shareUrlInput'); if (!i) return; i.select(); (navigator.clipboard ? navigator.clipboard.writeText(i.value) : Promise.resolve(document.execCommand('copy'))).then(() => { closeShareModal(); }); }
 function toggleMobileMenu() {
     const m = $('mobileMenu');
     if (!m) return;
@@ -344,33 +353,28 @@ function saveAccountPreferences(e) {
     const name = $('accName')?.value || 'User', city = $('accCity')?.value || 'New Delhi', country = $('accCountry')?.value || 'India';
     if ($('savedLocationDisplay')) $('savedLocationDisplay').innerText = `LOCATION: ${city.toUpperCase()}, ${country.toUpperCase()}`;
     if ($('userBtnLabel')) $('userBtnLabel').innerText = name.split(' ')[0].toUpperCase();
-    closeAccountModal(); alert(`Account saved for ${name}. Preferred Location: ${city}, ${country}`);
+    closeAccountModal();
 }
 
 /* ================= GALLERY ================= */
 function handleImageUpload(ev, key) { const f = ev.target.files[0]; if (!f) return; const r = new FileReader(); r.onload = e => { if ($('img-' + key)) $('img-' + key).src = e.target.result; }; r.readAsDataURL(f); }
 function editCaption(key) { const c = prompt('Enter custom photo caption:'); if (c && $('cap-' + key)) $('cap-' + key).innerText = c; }
-function openLightbox(key) {
-    if ($('lightboxImg') && $('img-' + key)) $('lightboxImg').src = $('img-' + key).src;
-    if ($('lightboxCaption') && $('cap-' + key)) $('lightboxCaption').innerText = $('cap-' + key).innerText;
-    if ($('lightboxModal')) $('lightboxModal').classList.remove('hidden');
-}
-const closeLightbox = () => { if ($('lightboxModal')) $('lightboxModal').classList.add('hidden'); };
 
 /* ================= AI CHATBOT ================= */
 const chatHistory = [];
 const FALLBACK = [
-    [/fire|smoke|flame/i, "If you see fire or smoke: get everyone out, stay low, don't use lifts, and call your local emergency number (112 in India). Don't go back inside for belongings."],
-    [/flood|water|tsunami|wave/i, "In a flood or high-wave event: move to higher ground, avoid walking or driving through floodwater, switch off electricity if safe, and follow official instructions."],
-    [/sensor|arduino|esp32|mpu6050|how.*work/i, "Bharat Astra reads MPU6050 accelerometer buoy wave motion and smoke sensors with an ESP32 microcontroller, compares them to thresholds, then raises alerts with a popup, siren, and live dashboard telemetry."],
-    [/hello|hi\b|hey/i, "Hi! I'm the Astra assistant. Ask me about fire safety, flood safety, or how this MPU6050 buoy system works."]
+    [/status|angle|tilt|live|reading/i, () => `Live Telemetry: Buoy tilt angle is ${latestTelemetry.angle.toFixed(2)}° (Event #${latestTelemetry.eventId}). Status is ${latestTelemetry.active ? 'ALERT ACTIVE (above 75.0° limit)' : 'NORMAL (below 65.0° reset threshold)'}.`],
+    [/fire|smoke|flame/i, () => "If you see fire or smoke: get everyone out, stay low, don't use lifts, and call your local emergency number (112 in India)."],
+    [/flood|water|tsunami|wave/i, () => "In a flood or high-wave event: move to higher ground, avoid walking or driving through floodwater, and follow official instructions."],
+    [/sensor|arduino|esp32|mpu6050|how.*work/i, () => "Bharat Astra uses an ESP32 and MPU6050 to calculate buoy roll angle. If tilt exceeds 75.0°, it triggers a single buzzer alert and updates Firebase until angle drops below 65.0°."],
+    [/hello|hi\b|hey/i, () => "Hi! I'm the Astra AI assistant. Ask me about live buoy tilt status, fire/flood safety, or how the MPU6050 system works."]
 ];
 function toggleChat() {
     const p = $('chatPanel');
     if (!p) return;
     p.classList.toggle('hidden');
     if (!p.classList.contains('hidden') && $('chatLog') && !$('chatLog').children.length) {
-        addChatMsg("Hi! I'm the Astra AI assistant. Ask me about fire or flood safety, or how Bharat Astra works.", 'bot');
+        addChatMsg("Hi! I'm the Astra AI assistant. Ask me about live buoy status, tilt angle, or safety procedures.", 'bot');
     }
 }
 function addChatMsg(text, who) {
@@ -393,7 +397,7 @@ async function sendChat() {
         reply = data.reply || data.error;
     } catch (e) {
         const h = FALLBACK.find(([re]) => re.test(text));
-        reply = h ? h[1] : "I can't reach the AI service right now. For emergencies, call your local emergency number (112 in India).";
+        reply = h ? h[1]() : "I'm running in offline telemetry mode. Ask me for 'live status', 'tilt angle', or emergency safety tips!";
     }
     if (typing) typing.textContent = reply;
     chatHistory.push({ role: 'assistant', content: reply });
