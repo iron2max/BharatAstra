@@ -76,6 +76,8 @@ function playBeep(freq = 880, dur = 0.2) {
 
         o.start();
         o.stop(c.currentTime + dur);
+
+        o.onended = () => c.close();
     } catch (e) { }
 }
 
@@ -225,26 +227,21 @@ if ($('problemCards')) {
                 <div class="w-14 h-14 rounded-xl bg-brand-${k}/20 border border-brand-${k} flex items-center justify-center text-brand-${k} text-2xl">
                     <i class="fa-solid ${ic}"></i>
                 </div>
-
                 <div>
                     <span class="text-xs font-mono text-brand-${k}">
                         MONITORING TARGET #${n}
                     </span>
-
                     <h3 class="text-2xl font-orbitron font-bold text-white">
                         ${t}
                     </h3>
                 </div>
             </div>
-
             <p class="text-slate-300 font-rajdhani text-lg">${q}</p>
-
             <div class="mt-6 pt-4 border-t border-slate-800/80 text-xs font-mono text-slate-400 space-y-2">
                 <div class="flex justify-between">
                     <span>Sensor:</span>
                     <span class="text-white">${s}</span>
                 </div>
-
                 <div class="flex justify-between">
                     <span>Demo Area:</span>
                     <span class="text-white">${z}</span>
@@ -268,19 +265,14 @@ if ($('flowSteps')) {
             ? 'border-brand-flood/50 bg-brand-flood/10'
             : 'border-slate-700'
         } hover:border-brand-cyan transition-all">
-
             <div class="w-8 h-8 mx-auto mb-2 rounded-full ${i == 5
             ? 'bg-brand-flood text-white'
             : 'bg-brand-cyan/20 text-brand-cyan'
         } flex items-center justify-center text-xs font-bold font-orbitron">
                 0${i + 1}
             </div>
-
-            <i class="fa-solid ${ic} text-2xl ${i >= 4 ? 'text-brand-flood' : 'text-slate-300'
-        } mb-2"></i>
-
+            <i class="fa-solid ${ic} text-2xl ${i >= 4 ? 'text-brand-flood' : 'text-slate-300'} mb-2"></i>
             <div class="text-xs font-bold text-white">${t}</div>
-
             <p class="text-[10px] text-slate-400 mt-1">${d}</p>
         </div>
     `).join('');
@@ -297,37 +289,25 @@ if ($('galleryGrid')) {
     $('galleryGrid').innerHTML = Object.entries(gallery).map(
         ([k, [txt, col, cap]]) => `
         <div class="glass-panel p-4 rounded-xl space-y-3 group">
-
             <div class="relative h-48 rounded-lg bg-slate-950 overflow-hidden border border-slate-800">
-
                 <img id="img-${k}"
                     src="https://placehold.co/600x400/0a1120/${col}?text=${txt}"
                     alt="${cap}"
                     class="w-full h-full object-cover">
-
                 <div class="absolute inset-0 bg-slate-950/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
-
                     <button onclick="openLightbox('${k}')"
                         class="p-2 rounded-lg bg-slate-900 text-brand-cyan border border-brand-cyan">
                         <i class="fa-solid fa-expand"></i>
                     </button>
-
                     <label class="cursor-pointer p-2 rounded-lg bg-slate-900 text-white border border-slate-700">
                         <i class="fa-solid fa-camera"></i>
-                        <input type="file"
-                            accept="image/*"
-                            class="hidden"
+                        <input type="file" accept="image/*" class="hidden"
                             onchange="handleImageUpload(event,'${k}')">
                     </label>
-
                 </div>
             </div>
-
             <div class="text-xs font-mono space-y-1">
-                <div class="text-slate-200 font-bold" id="cap-${k}">
-                    ${cap}
-                </div>
-
+                <div class="text-slate-200 font-bold" id="cap-${k}">${cap}</div>
                 <button onclick="editCaption('${k}')"
                     class="text-[10px] text-slate-500 hover:text-brand-cyan underline">
                     Edit Caption
@@ -369,7 +349,6 @@ if ($('teamGrid')) {
             <h3 class="font-orbitron font-bold text-lg text-white group-hover:text-brand-cyan">
                 ${n}
             </h3>
-
             <p class="font-mono text-xs text-slate-400 mt-1">
                 CLASS 9 • 2026–2027
             </p>
@@ -387,41 +366,41 @@ if ($('roadmapGrid')) {
         ['LOCATION AWARE', 'Geofenced browser & push alerts.'],
         ['LARGE-SCALE', 'Official emergency authority grid integration.']
     ].map(([t, d], i) => `
-        <div class="p-4 rounded-xl bg-slate-900/80 border ${i == 0 ? 'border-brand-cyan/30' : 'border-slate-800'
-        } text-center space-y-2">
-
-            <div class="${i == 0 ? 'text-brand-cyan' : 'text-slate-300'
-        } font-bold font-orbitron">
+        <div class="p-4 rounded-xl bg-slate-900/80 border ${i == 0 ? 'border-brand-cyan/30' : 'border-slate-800'} text-center space-y-2">
+            <div class="${i == 0 ? 'text-brand-cyan' : 'text-slate-300'} font-bold font-orbitron">
                 0${i + 1}. ${t}
             </div>
-
             <p class="text-[11px] text-slate-400">${d}</p>
         </div>
     `).join('');
 }
 
 
-/* ================= DEMO SIMULATION + LIVE FIREBASE TELEMETRY ================= */
+/* ================= DEMO SIMULATION + LIVE FIREBASE ================= */
 
 const FIREBASE_ALERT_URL =
     'https://bharatastra-154d9-default-rtdb.asia-southeast1.firebasedatabase.app/alert.json';
 
+
 /*
-    FLOOD ALERT DUPLICATE PREVENTION
+    NEW ALERT SYSTEM
 
-    This is the ONLY Firebase alert polling system.
+    First successful Firebase response:
+    - Establishes the current state silently.
+    - Does NOT show a popup for an old ACTIVE alert.
 
-    lastHandledAlertId remembers the last emergency already processed.
+    Later:
+    - CLEAR -> ACTIVE = one notification.
+    - ACTIVE -> ACTIVE = no repeated notification.
+    - ACTIVE -> CLEAR = reset.
 
-    Repeated Firebase updates for the same alert will update telemetry,
-    but will NOT produce another popup, browser alert or beep.
-
-    When Firebase reports CLEAR, the alert lock resets.
+    Firebase IDs are deliberately NOT used to identify new incidents,
+    because some ESP32 programs generate a new ID on every sensor update.
 */
 
-let lastHandledAlertId = null;
-let previousFirebaseStatus = 'CLEAR';
-
+let firebaseInitialised = false;
+let previousFirebaseStatus = null;
+let activeIncidentType = null;
 let firebasePollRunning = false;
 
 
@@ -457,47 +436,28 @@ function renderGlobalFeed() {
     if (!$('globalFeedList')) return;
 
     $('globalFeedList').innerHTML = initialFeedItems.map(i => {
-
         const f = i.type === 'FIRE';
 
         return `
-        <div class="p-4 rounded-xl glass-panel border ${f ? 'border-brand-fire/30' : 'border-brand-flood/30'
-            } flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-
+        <div class="p-4 rounded-xl glass-panel border ${f ? 'border-brand-fire/30' : 'border-brand-flood/30'} flex flex-col sm:flex-row sm:items-center justify-between gap-3">
             <div class="flex items-center space-x-3">
-
-                <span class="p-2 rounded-lg ${f
-                ? 'bg-brand-fire/20 text-brand-fire'
-                : 'bg-brand-flood/20 text-brand-flood'
-            }">
+                <span class="p-2 rounded-lg ${f ? 'bg-brand-fire/20 text-brand-fire' : 'bg-brand-flood/20 text-brand-flood'}">
                     <i class="fa-solid ${f ? 'fa-fire' : 'fa-water'}"></i>
                 </span>
-
                 <div>
-                    <div class="text-white font-bold text-sm">
-                        ${esc(i.title)}
-                    </div>
-
-                    <div class="text-slate-400 text-xs">
-                        ${esc(i.location)} • ${esc(i.time)}
-                    </div>
+                    <div class="text-white font-bold text-sm">${esc(i.title)}</div>
+                    <div class="text-slate-400 text-xs">${esc(i.location)} • ${esc(i.time)}</div>
                 </div>
             </div>
-
             <div class="flex items-center space-x-3">
-
                 <span class="text-[10px] px-2 py-0.5 rounded bg-slate-900 text-slate-300 border border-slate-700">
                     ${esc(i.status)}
                 </span>
-
-                <button onclick="openShareModal()"
-                    class="text-xs text-brand-cyan hover:underline">
+                <button onclick="openShareModal()" class="text-xs text-brand-cyan hover:underline">
                     <i class="fa-solid fa-share-nodes"></i> Share
                 </button>
-
             </div>
-        </div>
-        `;
+        </div>`;
     }).join('');
 }
 
@@ -507,7 +467,6 @@ renderGlobalFeed();
 /* ================= EMERGENCY BANNER ================= */
 
 function setBanner(cls, dot, html) {
-
     if (!$('homepageEmergencyBanner')) return;
 
     $('homepageEmergencyBanner').className =
@@ -521,6 +480,118 @@ function setBanner(cls, dot, html) {
     if ($('bannerText')) {
         $('bannerText').innerHTML = html;
     }
+}
+
+
+/* ================= IN-PAGE EMERGENCY NOTIFICATION ================= */
+
+/*
+    This replaces the blocking browser alert().
+
+    The notification is created inside the page and removed completely
+    when the user presses OK. It does not hide or remove website content.
+*/
+
+function closeEmergencyNotice() {
+    const notice = $('bharatAstraEmergencyNotice');
+
+    if (notice) {
+        notice.remove();
+    }
+
+    document.body.style.overflow = '';
+}
+
+
+function showEmergencyNotice(type, title, location, description) {
+
+    // Never stack multiple emergency notifications.
+    closeEmergencyNotice();
+
+    const isFlood = type === 'FLOOD';
+
+    const overlay = document.createElement('div');
+
+    overlay.id = 'bharatAstraEmergencyNotice';
+
+    overlay.className =
+        'fixed inset-0 flex items-center justify-center p-4';
+
+    overlay.style.cssText = `
+        z-index: 999999;
+        background: rgba(0,0,0,0.88);
+        backdrop-filter: blur(8px);
+    `;
+
+    overlay.innerHTML = `
+        <div role="alertdialog"
+             aria-modal="true"
+             aria-labelledby="astraNoticeTitle"
+             class="w-full max-w-lg rounded-2xl p-6 sm:p-8 text-center"
+             style="
+                background:#080f20;
+                border:2px solid ${isFlood ? '#007aff' : '#ff3b30'};
+                box-shadow:0 0 40px ${isFlood ? 'rgba(0,122,255,.4)' : 'rgba(255,59,48,.4)'};
+             ">
+
+            <div class="text-5xl mb-5" style="color:${isFlood ? '#007aff' : '#ff3b30'}">
+                <i class="fa-solid ${isFlood ? 'fa-water' : 'fa-fire'}"></i>
+            </div>
+
+            <div class="font-mono text-xs tracking-widest mb-3"
+                 style="color:${isFlood ? '#60a5fa' : '#ff6b60'}">
+                BHARAT ASTRA • EMERGENCY WARNING
+            </div>
+
+            <h2 id="astraNoticeTitle"
+                class="font-orbitron font-black text-2xl sm:text-3xl mb-4"
+                style="color:${isFlood ? '#60a5fa' : '#ff6b60'}">
+                ${esc(title)}
+            </h2>
+
+            <p class="text-slate-300 text-sm mb-3">
+                Location: ${esc(location)}
+            </p>
+
+            <p class="text-slate-400 text-sm mb-7">
+                ${esc(description)}
+            </p>
+
+            <button id="astraEmergencyOK"
+                class="w-full py-3 rounded-xl font-orbitron font-bold text-sm text-white"
+                style="background:${isFlood ? '#0759bd' : '#c62828'}">
+                OK — ACKNOWLEDGE ALERT
+            </button>
+
+            <p class="text-slate-500 text-[10px] mt-4">
+                Follow official emergency instructions. This is a prototype alert.
+            </p>
+        </div>
+    `;
+
+    document.body.appendChild(overlay);
+
+    // Prevent background scrolling while the notification is open.
+    document.body.style.overflow = 'hidden';
+
+    $('astraEmergencyOK').addEventListener('click', closeEmergencyNotice);
+
+    // Clicking outside the notification also closes it.
+    overlay.addEventListener('click', (event) => {
+        if (event.target === overlay) {
+            closeEmergencyNotice();
+        }
+    });
+
+    // Escape key closes the notification.
+    const escapeHandler = (event) => {
+        if (event.key === 'Escape' && $('bharatAstraEmergencyNotice')) {
+            closeEmergencyNotice();
+            document.removeEventListener('keydown', escapeHandler);
+        }
+    };
+
+    document.addEventListener('keydown', escapeHandler);
 }
 
 
@@ -552,11 +623,11 @@ function triggerDemoSimulation(type) {
             'STATUS: <span class="text-brand-fire font-bold tracking-wider">ACTIVE FIRE WARNING DETECTED IN DEMO AREA</span>'
         );
 
-        openEmergencyModal(
+        showEmergencyNotice(
             'FIRE',
             'FIRE HAZARD DETECTED',
             'Miniature Fire Demonstration Area',
-            'Smoke sensor alert detected. Buzzer triggered.'
+            'Smoke sensor alert detected.'
         );
 
         playBeep(900, .4);
@@ -583,11 +654,13 @@ function triggerDemoSimulation(type) {
             'STATUS: <span class="text-brand-flood font-bold tracking-wider">ACTIVE FLOOD / TSUNAMI LEVEL MOTION DETECTED BY MPU6050</span>'
         );
 
-        openEmergencyModal(
+        document.body.classList.add('flood-emergency-mode');
+
+        showEmergencyNotice(
             'FLOOD',
             'FLOOD DETECTED',
             'Buoy Station Zone A',
-            'Rigorous MPU6050 shaking / tsunami level motion active!'
+            'Rigorous MPU6050 shaking / tsunami-level motion active!'
         );
 
         playBeep(600, .4);
@@ -612,6 +685,8 @@ function triggerDemoSimulation(type) {
             $('heroUltrasonicReadout').className = 'text-emerald-400';
         }
 
+        document.body.classList.remove('flood-emergency-mode');
+
         setBanner(
             'bg-slate-900/90 border-b border-brand-cyan/20',
             'bg-brand-success',
@@ -621,11 +696,90 @@ function triggerDemoSimulation(type) {
 }
 
 
+/* ================= APPLY FIREBASE EMERGENCY STATE ================= */
+
+function applyFirebaseEmergency(type, title, loc, desc, notify) {
+
+    if (type === 'FLOOD') {
+
+        if ($('dashFireStatus')) {
+            $('dashFireStatus').innerHTML =
+                '<span class="text-emerald-400">NORMAL</span>';
+        }
+
+        if ($('dashFloodStatus')) {
+            $('dashFloodStatus').innerHTML =
+                `<span class="text-brand-flood font-bold animate-pulse">${esc(title)}</span>`;
+        }
+
+        if ($('heroUltrasonicReadout')) {
+            $('heroUltrasonicReadout').innerText = 'FLOOD';
+            $('heroUltrasonicReadout').className = 'text-brand-flood';
+        }
+
+        document.body.classList.add('flood-emergency-mode');
+
+        setBanner(
+            'bg-blue-950/90 border-b border-brand-flood/50',
+            'bg-brand-flood',
+            `STATUS: <span class="text-brand-flood font-bold tracking-wider">FLOOD DETECTED BY MPU6050 AT ${esc(loc.toUpperCase())}</span>`
+        );
+
+    } else {
+
+        if ($('dashFireStatus')) {
+            $('dashFireStatus').innerHTML =
+                `<span class="text-brand-fire font-bold animate-pulse">${esc(title)}</span>`;
+        }
+
+        if ($('dashFloodStatus')) {
+            $('dashFloodStatus').innerHTML =
+                '<span class="text-emerald-400">NORMAL</span>';
+        }
+
+        if ($('heroSmokeReadout')) {
+            $('heroSmokeReadout').innerText = 'ALERT';
+            $('heroSmokeReadout').className = 'text-brand-fire';
+        }
+
+        document.body.classList.remove('flood-emergency-mode');
+
+        setBanner(
+            'bg-red-950/90 border-b border-brand-fire/50',
+            'bg-brand-fire',
+            `STATUS: <span class="text-brand-fire font-bold tracking-wider">${esc(title)} AT ${esc(loc.toUpperCase())}</span>`
+        );
+    }
+
+    // Only a genuinely new incident creates a notification.
+    if (notify) {
+
+        showEmergencyNotice(type, title, loc, desc);
+
+        playBeep(type === 'FLOOD' ? 600 : 900, 0.45);
+
+        initialFeedItems.unshift({
+            id: String(Date.now()),
+            type: type,
+            title: title,
+            location: loc,
+            time: new Date().toLocaleTimeString(),
+            status: 'LIVE ESP32 ALERT'
+        });
+
+        if (initialFeedItems.length > 8) {
+            initialFeedItems.pop();
+        }
+
+        renderGlobalFeed();
+    }
+}
+
+
 /* ================= FIREBASE LIVE TELEMETRY ================= */
 
 async function pollFirebaseAlerts() {
 
-    // Prevent overlapping Firebase requests.
     if (firebasePollRunning) return;
 
     firebasePollRunning = true;
@@ -648,10 +802,7 @@ async function pollFirebaseAlerts() {
                 '<i class="fa-solid fa-database text-brand-success mr-1.5"></i>CLOUD TELEMETRY: <span class="text-brand-success font-bold">CONNECTED</span>';
         }
 
-        if (!data) {
-            firebasePollRunning = false;
-            return;
-        }
+        if (!data) return;
 
 
         /* ===== LIVE SENSOR READINGS ===== */
@@ -660,13 +811,11 @@ async function pollFirebaseAlerts() {
         const accelY = Number(data.waveAccelY || 0);
 
         if ($('accelXVal')) {
-            $('accelXVal').innerText =
-                accelX.toFixed(2) + ' m/s²';
+            $('accelXVal').innerText = accelX.toFixed(2) + ' m/s²';
         }
 
         if ($('accelYVal')) {
-            $('accelYVal').innerText =
-                accelY.toFixed(2) + ' m/s²';
+            $('accelYVal').innerText = accelY.toFixed(2) + ' m/s²';
         }
 
         if ($('liveSmokeVal') && data.smoke !== undefined) {
@@ -674,36 +823,14 @@ async function pollFirebaseAlerts() {
         }
 
 
-        /* ===== NORMALIZE FIREBASE STATUS ===== */
+        /* ===== NORMALIZE FIREBASE DATA ===== */
 
-        const status = String(data.status || 'CLEAR').toUpperCase();
+        const status = String(data.status || 'CLEAR').trim().toUpperCase();
 
-        const hazardType = String(
-            data.type || 'NORMAL'
-        ).toUpperCase();
+        const hazardType = String(data.type || 'NORMAL').trim().toUpperCase();
 
 
-        /* ===== CLEAR / RESET CONDITION ===== */
-
-        if (status === 'CLEAR' || status !== 'ACTIVE') {
-
-            // Reset the notification lock.
-            lastHandledAlertId = null;
-
-            previousFirebaseStatus = 'CLEAR';
-
-            // Remove emergency appearance.
-            document.body.classList.remove('flood-emergency-mode');
-
-            // Restore the normal dashboard.
-            triggerDemoSimulation('NORMAL');
-
-            firebasePollRunning = false;
-            return;
-        }
-
-
-        /* ===== DETECT FLOOD / TSUNAMI ===== */
+        /* ===== DETERMINE HAZARD TYPE ===== */
 
         const isSevereFlood =
             hazardType.includes('FLOOD') ||
@@ -711,60 +838,10 @@ async function pollFirebaseAlerts() {
             Math.abs(accelX) > 6.0 ||
             Math.abs(accelY) > 6.0;
 
-
-        /* ===== IDENTIFY CURRENT ALERT ===== */
-
-        /*
-            Prefer the Firebase ID.
-
-            If no ID is supplied, use the hazard type.
-            This prevents changing sensor readings from generating
-            a new popup every 2.5 seconds.
-        */
-
-        const currentAlertId = String(
-            data.id !== undefined && data.id !== null && data.id !== ''
-                ? data.id
-                : hazardType
-        );
-
-        const alertKey = `${status}_${currentAlertId}_${hazardType}`;
-
-
-        /* ===== DUPLICATE ALERT PREVENTION ===== */
-
-        if (alertKey === lastHandledAlertId) {
-
-            // Same emergency is still active.
-            // Do not show another popup or browser alert.
-
-            if (isSevereFlood) {
-                document.body.classList.add('flood-emergency-mode');
-            }
-
-            previousFirebaseStatus = 'ACTIVE';
-
-            firebasePollRunning = false;
-            return;
-        }
-
-
-        /*
-            Save the alert ID BEFORE displaying anything.
-
-            This ensures that even if the user interacts with
-            a popup, the same Firebase alert cannot trigger again.
-        */
-
-        lastHandledAlertId = alertKey;
-
-
-        /* ===== ALERT INFORMATION ===== */
+        const incidentType = isSevereFlood ? 'FLOOD' : 'FIRE';
 
         const title = data.type || (
-            isSevereFlood
-                ? 'FLOOD DETECTED'
-                : 'HIGH WAVE ALERT'
+            isSevereFlood ? 'FLOOD DETECTED' : 'FIRE DETECTED'
         );
 
         const loc = data.location || 'Buoy Station Zone A';
@@ -776,96 +853,87 @@ async function pollFirebaseAlerts() {
             `Time: ${data.time || 'LIVE'}`;
 
 
-        /* ===== FLOOD EMERGENCY ===== */
+        /* ===== FIRST SUCCESSFUL CHECK: SILENT INITIALIZATION ===== */
 
-        if (isSevereFlood) {
+        if (!firebaseInitialised) {
 
-            if ($('dashFloodStatus')) {
-                $('dashFloodStatus').innerHTML =
-                    `<span class="text-brand-flood font-bold animate-pulse">${esc(title)}</span>`;
+            firebaseInitialised = true;
+            previousFirebaseStatus = status;
+
+            if (status === 'ACTIVE') {
+
+                // Show existing emergency on the dashboard,
+                // but do NOT create a popup on page load.
+                activeIncidentType = incidentType;
+
+                applyFirebaseEmergency(
+                    incidentType,
+                    title,
+                    loc,
+                    desc,
+                    false
+                );
+
+            } else {
+
+                activeIncidentType = null;
+
+                triggerDemoSimulation('NORMAL');
             }
 
-            if ($('heroUltrasonicReadout')) {
-                $('heroUltrasonicReadout').innerText = 'FLOOD';
-                $('heroUltrasonicReadout').className = 'text-brand-flood';
-            }
+            return;
+        }
 
-            setBanner(
-                'bg-blue-950/90 border-b border-brand-flood/50',
-                'bg-brand-flood',
-                `STATUS: <span class="text-brand-flood font-bold tracking-wider">FLOOD DETECTED BY MPU6050 AT ${esc(loc.toUpperCase())}</span>`
-            );
 
-            // Activate emergency appearance.
-            document.body.classList.add('flood-emergency-mode');
+        /* ===== CLEAR / RESET CONDITION ===== */
 
-            // ONE browser popup for this alert ID.
-            alert(
-                "🚨 EMERGENCY: Flood detected by mpu6050! Rigorous wave shaking or tsunami levels active!"
-            );
+        if (status !== 'ACTIVE') {
 
-            // Dashboard modal.
-            openEmergencyModal(
-                'FLOOD',
-                title,
-                loc,
-                desc
-            );
+            const wasActive = previousFirebaseStatus === 'ACTIVE';
 
-            // Emergency sound.
-            playBeep(600, 0.45);
-
-        } else {
-
-            /* ===== FIRE EMERGENCY ===== */
-
-            if ($('dashFireStatus')) {
-                $('dashFireStatus').innerHTML =
-                    `<span class="text-brand-fire font-bold animate-pulse">${esc(title)}</span>`;
-            }
-
-            if ($('heroSmokeReadout')) {
-                $('heroSmokeReadout').innerText = 'ALERT';
-                $('heroSmokeReadout').className = 'text-brand-fire';
-            }
-
-            setBanner(
-                'bg-red-950/90 border-b border-brand-fire/50',
-                'bg-brand-fire',
-                `STATUS: <span class="text-brand-fire font-bold tracking-wider">${esc(title)} AT ${esc(loc.toUpperCase())}</span>`
-            );
+            previousFirebaseStatus = 'CLEAR';
+            activeIncidentType = null;
 
             document.body.classList.remove('flood-emergency-mode');
 
-            openEmergencyModal(
-                'FIRE',
-                title,
-                loc,
-                desc
-            );
+            // Close an old emergency notice if the incident is cleared.
+            closeEmergencyNotice();
 
-            playBeep(900, 0.45);
+            if (wasActive) {
+                triggerDemoSimulation('NORMAL');
+            }
+
+            return;
         }
 
 
-        /* ===== ADD ALERT TO FEED ===== */
+        /* ===== ACTIVE ALERT ===== */
 
-        initialFeedItems.unshift({
-            id: String(data.id || Date.now()),
-            type: isSevereFlood ? 'FLOOD' : 'FIRE',
-            title: title,
-            location: loc,
-            time: data.time || 'Just now',
-            status: 'LIVE ESP32 ALERT'
-        });
+        /*
+            A new alert is identified by a state transition or
+            a change between FIRE and FLOOD.
 
-        if (initialFeedItems.length > 8) {
-            initialFeedItems.pop();
-        }
+            The changing Firebase ID is intentionally ignored.
+        */
 
-        renderGlobalFeed();
+        const isNewIncident =
+            previousFirebaseStatus !== 'ACTIVE' ||
+            activeIncidentType !== incidentType;
 
         previousFirebaseStatus = 'ACTIVE';
+        activeIncidentType = incidentType;
+
+
+        /* ===== UPDATE DASHBOARD EVERY POLL ===== */
+
+        applyFirebaseEmergency(
+            incidentType,
+            title,
+            loc,
+            desc,
+            isNewIncident
+        );
+
 
     } catch (err) {
 
@@ -889,11 +957,10 @@ async function pollFirebaseAlerts() {
 // Start with a normal dashboard.
 triggerDemoSimulation('NORMAL');
 
-// Initial Firebase check.
+// First successful Firebase read establishes the existing state silently.
 pollFirebaseAlerts();
 
 // Continue checking Firebase every 2.5 seconds.
-// This is the ONLY Firebase polling interval.
 setInterval(pollFirebaseAlerts, 2500);
 
 
@@ -938,8 +1005,7 @@ function openEmergencyModal(type, title, loc, desc) {
     }
 
     t.className =
-        `font-orbitron font-black text-2xl ${fire ? 'text-brand-fire' : 'text-brand-flood'
-        }`;
+        `font-orbitron font-black text-2xl ${fire ? 'text-brand-fire' : 'text-brand-flood'}`;
 
     if ($('emergencyModal')) {
         $('emergencyModal').classList.remove('hidden');
@@ -971,8 +1037,7 @@ const closeAccountModal = () => {
 const openShareModal = () => {
 
     if ($('shareUrlInput')) {
-        $('shareUrlInput').value =
-            location.origin + '/#alerts';
+        $('shareUrlInput').value = location.origin + '/#alerts';
     }
 
     if ($('shareModal')) {
@@ -1149,9 +1214,7 @@ function saveAccountPreferences(e) {
     e.preventDefault();
 
     const name = $('accName')?.value || 'User';
-
     const city = $('accCity')?.value || 'New Delhi';
-
     const country = $('accCountry')?.value || 'India';
 
     if ($('savedLocationDisplay')) {
