@@ -289,7 +289,8 @@
                         <h2 class="text-3xl sm:text-5xl font-orbitron font-black text-white mt-2">BHARAT ASTRA MISSION
                             CONTROL</h2>
                     </div>
-                    <div id="firebaseSyncStatus" class="text-xs font-mono px-3 py-1.5 rounded-lg bg-slate-900 border border-slate-700 text-slate-400">
+                    <div id="firebaseSyncStatus"
+                        class="text-xs font-mono px-3 py-1.5 rounded-lg bg-slate-900 border border-slate-700 text-slate-400">
                         <i class="fa-solid fa-database text-brand-cyan mr-1.5"></i>CLOUD TELEMETRY: CONNECTING...
                     </div>
                 </div>
@@ -328,8 +329,10 @@
                     <div>
                         <span class="tag inline-block bg-brand-cyan/10 border border-brand-cyan/30 text-brand-cyan"><i
                                 class="fa-solid fa-video"></i> OVERHEAD OPTICAL DOWNLINK</span>
-                        <h2 class="text-3xl sm:text-5xl font-orbitron font-black text-white mt-2">ACCESS LIVE FOOTAGE</h2>
-                        <p class="text-slate-400 font-rajdhani text-lg mt-1">Direct ESP32-CAM surveillance stream from Miniature Demo City — Zone A.</p>
+                        <h2 class="text-3xl sm:text-5xl font-orbitron font-black text-white mt-2">ACCESS LIVE FOOTAGE
+                        </h2>
+                        <p class="text-slate-400 font-rajdhani text-lg mt-1">Direct ESP32-CAM surveillance stream from
+                            Miniature Demo City — Zone A.</p>
                     </div>
                     <button onclick="openEsp32CamWindow()"
                         class="px-6 py-3.5 rounded-xl bg-gradient-to-r from-brand-cyan to-blue-600 text-slate-950 font-orbitron text-xs font-bold shadow-[0_0_20px_rgba(0,242,254,.35)] hover:opacity-95 transition-all inline-flex items-center justify-center gap-2 shrink-0">
@@ -337,367 +340,28 @@
                     </button>
                 </div>
 
-                <div class="glass-panel rounded-2xl border border-brand-cyan/30 p-6 sm:p-8 corner-accents grid grid-cols-1 lg:grid-cols-12 gap-8 items-center">
+                <div
+                    class="glass-panel rounded-2xl border border-brand-cyan/30 p-6 sm:p-8 corner-accents grid grid-cols-1 lg:grid-cols-12 gap-8 items-center">
                     <div class="lg:col-span-7">
-                        <div class="relative aspect-video w-full rounded-xl bg-slate-950 border border-slate-800 overflow-hidden flex flex-col items-center justify-center p-6 text-center">
-                            <div class="absolute top-3 left-3 flex items-center gap-2 px-2.5 py-1 rounded bg-slate-900/90 border border-slate-700 text-[10px] font-mono">
+                        <div
+                            class="relative aspect-video w-full rounded-xl bg-slate-950 border border-slate-800 overflow-hidden flex flex-col items-center justify-center p-6 text-center">
+                            <div
+                                class="absolute top-3 left-3 flex items-center gap-2 px-2.5 py-1 rounded bg-slate-900/90 border border-slate-700 text-[10px] font-mono">
                                 <span class="w-2 h-2 rounded-full bg-brand-fire animate-ping"></span>
                                 <span class="text-slate-300 font-bold">CAM-01 // ESP32-CAM</span>
                             </div>
-                            <div class="absolute top-3 right-3 text-[10px] font-mono text-brand-cyan bg-slate-900/90 px-2.5 py-1 rounded border border-brand-cyan/30">
+                            <div
+                                class="absolute top-3 right-3 text-[10px] font-mono text-brand-cyan bg-slate-900/90 px-2.5 py-1 rounded border border-brand-cyan/30">
                                 SHORTCUT: PRESS [L]
                             </div>
                             <i class="fa-solid fa-satellite-dish text-4xl text-brand-cyan/70 mb-3"></i>
-                            <h3 class="font-orbitron font-bold text-white text-base sm:text-lg">EXTERNAL ESP32-CAM STREAM READY</h3>
-                            <p class="font-mono text-xs text-slate-400 max-w-md mt-2">Click <span class="text-brand-cyan font-bold">Access Live Footage</span> or press the <span class="px-1.5 py-0.5 rounded bg-slate-800 border border-slate-600 text-white font-bold">L</span> key on your keyboard to launch the live camera feed in a separate tab.</p>
+                            <h3 class="font-orbitron font-bold text-white text-base sm:text-lg">EXTERNAL ESP32-CAM
+                                STREAM READY</h3>
+                            <p class="font-mono text-xs text-slate-400 max-w-md mt-2">Click <span
+                                    class="text-brand-cyan font-bold">Access Live Footage</span> or press the <span
+                                    class="px-1.5 py-0.5 rounded bg-slate-800 border border-slate-600 text-white font-bold">L</span>
+                                key on your keyboard to launch the live camera feed in a separate tab.</p>
                             <button onclick="openEsp32CamWindow()"
                                 class="mt-5 px-6 py-3 rounded-xl bg-brand-cyan/15 hover:bg-brand-cyan hover:text-slate-950 border border-brand-cyan text-brand-cyan font-orbitron text-xs font-bold transition-all flex items-center gap-2">
                                 <i class="fa-solid fa-video"></i> ACCESS LIVE FOOTAGE
                             </button>
-                        </div>
-                    </div>
-
-                    <div class="lg:col-span-5 space-y-4 font-mono text-xs">
-                        <div class="p-4 rounded-xl bg-slate-900/80 border border-slate-800 space-y-3">
-                            <div class="flex items-center justify-between">
-                                <span class="text-brand-cyan font-bold font-orbitron">ESP32-CAM STREAM URL</span>
-                                <button onclick="configureEsp32CamUrl()" class="text-[11px] text-slate-400 hover:text-brand-cyan underline">
-                                    <i class="fa-solid fa-gear"></i> Change Link
-                                </button>
-                            </div>
-                            <div class="flex gap-2">
-                                <input type="url" id="esp32CamUrlInput" value="http://192.168.4.1:81/stream"
-                                    placeholder="http://192.168.x.x:81/stream"
-                                    onchange="saveEsp32CamUrl(this.value)"
-                                    class="flex-1 bg-slate-950 border border-slate-700 rounded-lg px-3 py-2.5 text-brand-cyan outline-none focus:border-brand-cyan">
-                                <button onclick="openEsp32CamWindow()" title="Launch Stream"
-                                    class="px-4 py-2.5 rounded-lg bg-brand-cyan text-slate-950 font-orbitron font-bold hover:opacity-90">
-                                    GO
-                                </button>
-                            </div>
-                            <p class="text-[11px] text-slate-500">Saved automatically in your browser. Pressing <strong class="text-slate-300">L</strong> anywhere outside text inputs opens this link in a new tab.</p>
-                        </div>
-
-                        <div class="p-4 rounded-xl bg-slate-900/60 border border-slate-800 space-y-1.5 text-[11px] text-slate-400">
-                            <div class="text-white font-bold">CONNECTION NOTES:</div>
-                            <p>• Ensure your device is on the same local Wi-Fi/hotspot as the ESP32-CAM.</p>
-                            <p>• Opening in a separate tab avoids HTTPS mixed-content blocks on local IP streams.</p>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </section>
-
-        <!-- ALERTS -->
-        <section id="alerts" class="py-20 border-b border-slate-800/80 bg-slate-950/40">
-            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-12">
-                <div class="text-center max-w-3xl mx-auto space-y-3">
-                    <span class="tag bg-brand-fire/10 border border-brand-fire/30 text-brand-fire">NOTIFICATION
-                        ENGINE</span>
-                    <h2 class="text-3xl sm:text-5xl font-orbitron font-black text-white">EMERGENCY ALERT FEED</h2>
-                    <p class="text-slate-400 text-sm">Real-time location-aware warnings and disaster intelligence
-                        broadcast interface.</p>
-                </div>
-                <div class="glass-panel p-6 rounded-2xl space-y-4">
-                    <div class="flex items-center justify-between flex-wrap gap-2">
-                        <h3 class="font-orbitron font-bold text-lg text-white"><i
-                                class="fa-solid fa-location-dot text-brand-cyan"></i> ALERTS NEAR YOU</h3>
-                        <span id="savedLocationDisplay"
-                            class="text-xs font-mono text-brand-cyan px-2.5 py-1 rounded bg-brand-cyan/10 border border-brand-cyan/30">LOCATION:
-                            NEW DELHI, INDIA</span>
-                    </div>
-                    <div id="localAlertContainer"
-                        class="p-4 rounded-xl bg-slate-900/80 border border-slate-800 text-sm font-mono flex items-center justify-between text-slate-300">
-                        <div class="flex items-center space-x-3"><span
-                                class="w-3 h-3 rounded-full bg-emerald-400"></span><span>NO ACTIVE EMERGENCY REPORTED
-                                NEAR YOUR SAVED LOCATION.</span></div>
-                        <button onclick="openAccountModal()" class="text-xs text-brand-cyan hover:underline">CHANGE
-                            PREFERENCES</button>
-                    </div>
-                </div>
-                <div class="space-y-4">
-                    <h3 class="font-orbitron font-bold text-xl text-white"><i
-                            class="fa-solid fa-globe text-brand-cyan"></i> GLOBAL EMERGENCY FEED</h3>
-                    <div id="globalFeedList" class="space-y-3 font-mono"></div>
-                </div>
-            </div>
-        </section>
-
-        <!-- PROTOTYPE -->
-        <section id="prototype" class="py-20 border-b border-slate-800/80">
-            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-8">
-                <div class="flex flex-col md:flex-row md:items-end justify-between gap-4">
-                    <div>
-                        <span class="tag bg-brand-cyan/10 border border-brand-cyan/30 text-brand-cyan">HARDWARE
-                            DOCUMENTATION</span>
-                        <h2 class="text-3xl sm:text-5xl font-orbitron font-black text-white mt-2">OUR PROTOTYPE</h2>
-                        <p class="text-slate-400 font-rajdhani text-xl">"From concept to working hardware."</p>
-                    </div>
-                    <label
-                        class="cursor-pointer px-5 py-3 rounded-xl bg-gradient-to-r from-brand-cyan to-blue-600 text-slate-950 font-orbitron text-xs font-bold inline-flex items-center gap-2"><i
-                            class="fa-solid fa-cloud-arrow-up"></i> UPLOAD OUR MAIN PROTOTYPE PHOTO<input type="file"
-                            accept="image/*" class="hidden" onchange="handleImageUpload(event,'main')"></label>
-                </div>
-                <div class="glass-panel p-4 rounded-2xl border border-brand-cyan/30 group">
-                    <div
-                        class="relative w-full h-80 sm:h-96 rounded-xl bg-slate-950 border-2 border-dashed border-slate-800 overflow-hidden">
-                        <img id="img-main"
-                            src="https://placehold.co/1200x600/0a1120/00f2fe?text=BHARAT+ASTRA+PHYSICAL+PROTOTYPE+PHOTO"
-                            alt="Prototype" class="w-full h-full object-cover">
-                        <div
-                            class="absolute inset-0 bg-slate-950/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-3">
-                            <button onclick="openLightbox('main')"
-                                class="p-3 rounded-xl bg-slate-900/90 text-brand-cyan border border-brand-cyan"><i
-                                    class="fa-solid fa-expand"></i></button>
-                            <label
-                                class="cursor-pointer p-3 rounded-xl bg-slate-900/90 text-white border border-slate-700"><i
-                                    class="fa-solid fa-pen"></i> REPLACE<input type="file" accept="image/*"
-                                    class="hidden" onchange="handleImageUpload(event,'main')"></label>
-                        </div>
-                    </div>
-                    <div class="mt-4 flex justify-between items-center text-xs font-mono gap-2">
-                        <div><span class="text-brand-cyan font-bold block" id="cap-main">PRIMARY HARDWARE PLATFORM:
-                                Satellite Track & City Grid</span><span class="text-slate-500">Actual Physical
-                                Demonstration Assembly</span></div>
-                        <button onclick="editCaption('main')"
-                            class="text-slate-400 hover:text-brand-cyan underline text-[11px]"><i
-                                class="fa-solid fa-pen-to-square"></i> Edit Caption</button>
-                    </div>
-                </div>
-                <div id="galleryGrid" class="grid grid-cols-1 md:grid-cols-3 gap-6"></div>
-            </div>
-        </section>
-
-        <!-- AI + HARDWARE -->
-        <section class="py-20 border-b border-slate-800/80 bg-slate-950/50">
-            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-16">
-                <div class="text-center max-w-3xl mx-auto space-y-4">
-                    <span class="tag bg-cyan-400/10 border border-cyan-400/30 text-cyan-400">MACHINE INTELLIGENCE</span>
-                    <h2 class="text-3xl sm:text-5xl font-orbitron font-black text-white">FROM SENSOR DATA TO
-                        INTELLIGENCE</h2>
-                    <div
-                        class="p-4 rounded-xl bg-slate-900/90 border border-slate-800 text-xs font-mono text-slate-300">
-                        SENSOR DATA → DATA PROCESSING → AI / ML (PLANNED) → PATTERN CLASSIFICATION → ALERT</div>
-                    <p class="text-xs font-mono text-slate-400 italic">* Current implementation: microcontroller with
-                        smoke, flame and ultrasonic sensors. AI/ML detection is a planned future enhancement. The Astra
-                        chat assistant answers safety questions only.</p>
-                </div>
-                <div class="space-y-6">
-                    <h3 class="font-orbitron font-bold text-xl text-white text-center">SYSTEM HARDWARE & COMPONENTS</h3>
-                    <div id="hwGrid" class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4 font-mono text-xs">
-                    </div>
-                </div>
-            </div>
-        </section>
-
-        <!-- TEAM -->
-        <section id="team" class="py-20 border-b border-slate-800/80">
-            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-12">
-                <div class="text-center space-y-3"><span
-                        class="tag bg-brand-cyan/10 border border-brand-cyan/30 text-brand-cyan">INNOVATORS</span>
-                    <h2 class="text-3xl sm:text-5xl font-orbitron font-black text-white">TEAM HORIZON</h2>
-                </div>
-                <div id="teamGrid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-6"></div>
-            </div>
-        </section>
-
-        <!-- ROADMAP -->
-        <section class="py-20 border-b border-slate-800/80 bg-slate-950/40">
-            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-12">
-                <div class="text-center space-y-3"><span
-                        class="tag bg-brand-cyan/10 border border-brand-cyan/30 text-brand-cyan">ROADMAP</span>
-                    <h2 class="text-3xl sm:text-5xl font-orbitron font-black text-white">FROM PROTOTYPE TO CONNECTED
-                        SAFETY</h2>
-                </div>
-                <div id="roadmapGrid" class="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-6 gap-4 font-mono text-xs">
-                </div>
-            </div>
-        </section>
-
-        <!-- CTA -->
-        <section class="py-24 text-center border-b border-slate-800">
-            <div class="max-w-4xl mx-auto px-4 space-y-6">
-                <h2 class="text-4xl sm:text-6xl font-orbitron font-black text-white">BHARAT ASTRA</h2>
-                <p class="text-2xl font-orbitron font-bold text-brand-cyan">"Observe. Detect. Alert. Protect."</p>
-                <p class="text-slate-300 font-rajdhani text-xl">"Technology for a more informed and prepared tomorrow."
-                </p>
-                <div class="pt-6 flex flex-col sm:flex-row justify-center gap-4 font-orbitron text-xs font-bold">
-                    <button onclick="scrollToSection('dashboard')"
-                        class="px-8 py-4 rounded-xl bg-gradient-to-r from-brand-cyan to-blue-600 text-slate-950">EXPLORE
-                        BHARAT ASTRA</button>
-                    <button onclick="openAccountModal()"
-                        class="px-8 py-4 rounded-xl bg-slate-900 border border-slate-700 text-white">CREATE AN
-                        ACCOUNT</button>
-                </div>
-            </div>
-        </section>
-    </main>
-
-    <footer class="bg-slate-950 text-slate-400 font-mono text-xs py-12 border-t border-slate-900">
-        <div class="max-w-7xl mx-auto px-4 grid grid-cols-1 md:grid-cols-3 gap-8">
-            <div class="space-y-2">
-                <div class="text-white font-orbitron font-bold text-lg"><i
-                        class="fa-solid fa-satellite text-brand-cyan"></i> BHARAT ASTRA</div>
-                <p class="text-slate-500">AI-Powered Satellite Fire & Flood Detection System</p>
-                <p class="text-[10px] text-brand-cyan">Bharat Innovation Challenge 2026–2027</p>
-            </div>
-            <div>
-                <h4 class="font-orbitron font-bold text-white mb-3 text-sm">NAVIGATION</h4>
-                <ul class="space-y-2">
-                    <li><a href="#overview" class="hover:text-brand-cyan">Overview</a></li>
-                    <li><a href="#dashboard" class="hover:text-brand-cyan">Live Dashboard</a></li>
-                    <li><a href="#live-footage" class="hover:text-brand-cyan">Access Live Footage</a></li>
-                    <li><a href="#alerts" class="hover:text-brand-cyan">Emergency Alerts</a></li>
-                    <li><a href="#team" class="hover:text-brand-cyan">Team</a></li>
-                </ul>
-            </div>
-            <div>
-                <h4 class="font-orbitron font-bold text-white mb-3 text-sm">SYSTEM STATUS</h4>
-                <div class="p-3 rounded-lg bg-slate-900 border border-slate-800 text-emerald-400 font-bold">MAINFRAME:
-                    ONLINE</div>
-            </div>
-        </div>
-        <div class="max-w-7xl mx-auto px-4 mt-8 pt-6 border-t border-slate-900 text-center text-slate-600">&copy;
-            2026–2027 Team Horizon. All rights reserved.</div>
-    </footer>
-
-    <!-- EMERGENCY MODAL -->
-    <div id="emergencyModal"
-        class="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-md hidden flex items-center justify-center p-4">
-        <div id="emergencyModalCard"
-            class="w-full max-w-lg glass-panel p-6 sm:p-8 rounded-2xl border-2 space-y-6 relative">
-            <div class="flex justify-between items-start">
-                <div class="flex items-center space-x-3">
-                    <div id="emergencyModalIcon" class="w-12 h-12 rounded-xl flex items-center justify-center text-2xl">
-                        <i class="fa-solid fa-triangle-exclamation"></i>
-                    </div>
-                    <div><span
-                            class="text-[10px] font-mono font-bold tracking-widest px-2 py-0.5 rounded bg-white/10">EMERGENCY
-                            DETECTED</span>
-                        <h3 id="emergencyModalTitle" class="font-orbitron font-black text-2xl text-white">FIRE ALERT
-                        </h3>
-                    </div>
-                </div>
-                <button onclick="closeEmergencyModal()" class="text-slate-400 hover:text-white text-xl"><i
-                        class="fa-solid fa-xmark"></i></button>
-            </div>
-            <div class="space-y-3 font-mono text-xs border-y border-slate-800 py-4">
-                <div class="flex justify-between gap-4"><span class="text-slate-400">LOCATION:</span><span
-                        id="emergencyModalLoc" class="text-white font-bold text-right">MINIATURE DEMO CITY - ZONE
-                        A</span></div>
-                <div class="flex justify-between"><span class="text-slate-400">TIME DETECTED:</span><span
-                        id="emergencyModalTime" class="text-white font-bold">--</span></div>
-                <div class="flex justify-between"><span class="text-slate-400">STATUS:</span><span
-                        class="text-red-400 font-bold animate-pulse">ACTIVE HAZARD</span></div>
-                <div id="emergencyModalDesc" class="p-3 rounded-lg bg-slate-900 text-slate-300 text-[11px]">"An
-                    emergency condition has been detected in this demonstration."</div>
-            </div>
-            <div
-                class="space-y-1 text-[11px] font-mono text-slate-400 bg-slate-950 p-3 rounded-lg border border-slate-800">
-                <div class="text-white font-bold mb-1">SAFETY INSTRUCTIONS:</div>
-                <p>• Follow instructions from official emergency authorities.</p>
-                <p>• Avoid entering affected areas.</p>
-                <p>• Verify important emergency information through official sources.</p>
-            </div>
-            <div class="flex space-x-3 font-orbitron text-xs font-bold">
-                <button onclick="openShareModal()" class="flex-1 py-3 rounded-xl bg-slate-800 text-white"><i
-                        class="fa-solid fa-share-nodes"></i> SHARE ALERT</button>
-                <button onclick="closeEmergencyModal()"
-                    class="flex-1 py-3 rounded-xl bg-brand-cyan text-slate-950">CLOSE</button>
-            </div>
-        </div>
-    </div>
-
-    <!-- ACCOUNT MODAL -->
-    <div id="accountModal"
-        class="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-md hidden flex items-center justify-center p-4">
-        <div
-            class="w-full max-w-md max-h-[90vh] overflow-y-auto glass-panel p-6 sm:p-8 rounded-2xl border border-brand-cyan/30 space-y-6 corner-accents">
-            <div class="flex justify-between items-center border-b border-slate-800 pb-4">
-                <h3 class="font-orbitron font-bold text-xl text-white"><i
-                        class="fa-solid fa-user-shield text-brand-cyan"></i> USER PREFERENCES</h3><button
-                    onclick="closeAccountModal()" class="text-slate-400 hover:text-white"><i
-                        class="fa-solid fa-xmark text-lg"></i></button>
-            </div>
-            <form onsubmit="saveAccountPreferences(event)" class="space-y-4 font-mono text-xs">
-                <div><label class="text-slate-400 block mb-1">FULL NAME</label><input type="text" id="accName" required
-                        placeholder="Ivanka Singh"
-                        class="w-full bg-slate-900 border border-slate-700 rounded-lg p-2.5 text-white focus:border-brand-cyan outline-none">
-                </div>
-                <div><label class="text-slate-400 block mb-1">EMAIL ADDRESS</label><input type="email" id="accEmail"
-                        required placeholder="user@bharatastra.in"
-                        class="w-full bg-slate-900 border border-slate-700 rounded-lg p-2.5 text-white focus:border-brand-cyan outline-none">
-                </div>
-                <div><label class="text-slate-400 block mb-1">COUNTRY</label><select id="accCountry" required
-                        onchange="populateCities()"
-                        class="w-full bg-slate-900 border border-slate-700 rounded-lg p-2.5 text-white focus:border-brand-cyan outline-none"></select>
-                </div>
-                <div><label class="text-slate-400 block mb-1">CITY</label><select id="accCity" required
-                        class="w-full bg-slate-900 border border-slate-700 rounded-lg p-2.5 text-white focus:border-brand-cyan outline-none"></select>
-                </div>
-                <div class="space-y-2 pt-2 border-t border-slate-800"><span
-                        class="text-slate-300 font-bold block mb-1">NOTIFICATION PREFERENCES</span>
-                    <label class="flex items-center space-x-2 text-slate-400"><input type="checkbox" id="prefFire"
-                            checked class="accent-brand-cyan"><span>Fire Alerts</span></label>
-                    <label class="flex items-center space-x-2 text-slate-400"><input type="checkbox" id="prefFlood"
-                            checked class="accent-brand-cyan"><span>Flood Alerts</span></label>
-                    <label class="flex items-center space-x-2 text-slate-400"><input type="checkbox" id="prefMajor"
-                            checked class="accent-brand-cyan"><span>Major Critical Emergencies</span></label>
-                </div>
-                <button type="submit"
-                    class="w-full py-3 rounded-xl bg-brand-cyan text-slate-950 font-orbitron font-bold text-xs">SAVE
-                    ACCOUNT PREFERENCES</button>
-            </form>
-        </div>
-    </div>
-
-    <!-- SHARE MODAL -->
-    <div id="shareModal"
-        class="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-md hidden flex items-center justify-center p-4">
-        <div class="w-full max-w-sm glass-panel p-6 rounded-2xl space-y-4 text-center">
-            <i class="fa-solid fa-share-nodes text-3xl text-brand-cyan"></i>
-            <h3 class="font-orbitron font-bold text-lg text-white">SHARE EMERGENCY ADVISORY</h3>
-            <p class="text-slate-400 font-mono text-xs">Copy informational link to alert communities:</p>
-            <input type="text" readonly id="shareUrlInput"
-                class="w-full bg-slate-900 border border-slate-800 p-2 rounded text-center text-xs font-mono text-brand-cyan">
-            <button onclick="copyShareUrl()"
-                class="w-full py-2.5 rounded-lg bg-brand-cyan text-black font-orbitron font-bold text-xs"><i
-                    class="fa-solid fa-copy"></i> COPY LINK</button>
-            <button onclick="closeShareModal()" class="text-xs text-slate-500 hover:text-white">CLOSE</button>
-        </div>
-    </div>
-
-    <!-- LIGHTBOX -->
-    <div id="lightboxModal"
-        class="fixed inset-0 z-50 bg-slate-950/90 backdrop-blur-md hidden flex flex-col items-center justify-center p-4">
-        <button onclick="closeLightbox()" class="absolute top-6 right-6 text-slate-400 hover:text-white text-3xl"><i
-                class="fa-solid fa-xmark"></i></button>
-        <img id="lightboxImg" src="" alt="Full view"
-            class="max-w-full max-h-[75vh] object-contain rounded-xl border border-brand-cyan/30">
-        <p id="lightboxCaption" class="mt-4 font-mono text-xs text-brand-cyan font-bold text-center"></p>
-    </div>
-
-    <!-- CHATBOT -->
-    <button id="chatBtn" onclick="toggleChat()" aria-label="Open AI assistant"
-        class="fixed bottom-5 right-5 z-40 w-14 h-14 rounded-full bg-gradient-to-r from-brand-cyan to-blue-600 text-slate-950 text-xl shadow-[0_0_20px_rgba(0,242,254,.5)]"><i
-            class="fa-solid fa-robot"></i></button>
-    <div id="chatPanel"
-        class="hidden fixed bottom-24 right-5 z-40 w-[calc(100vw-2.5rem)] max-w-sm h-[28rem] glass-panel rounded-2xl border border-brand-cyan/30 flex flex-col overflow-hidden">
-        <div class="flex items-center justify-between px-4 py-3 border-b border-slate-800 bg-slate-950/80">
-            <div class="font-orbitron text-xs font-bold text-brand-cyan"><i class="fa-solid fa-robot"></i> ASTRA AI
-                ASSISTANT</div><button onclick="toggleChat()" class="text-slate-400 hover:text-white"><i
-                    class="fa-solid fa-xmark"></i></button>
-        </div>
-        <div id="chatLog" class="flex-1 overflow-y-auto p-3 space-y-2 text-xs font-mono"></div>
-        <div class="p-3 border-t border-slate-800 flex gap-2"><input id="chatInput" type="text" maxlength="500"
-                placeholder="Ask about fire safety, floods..." onkeydown="if(event.key==='Enter')sendChat()"
-                class="flex-1 bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-white text-xs outline-none focus:border-brand-cyan"><button
-                onclick="sendChat()" aria-label="Send" class="px-3 rounded-lg bg-brand-cyan text-slate-950"><i
-                    class="fa-solid fa-paper-plane"></i></button></div>
-    </div>
-
-    <!-- Include external JavaScript -->
-    <script src="web.js"></script>
-</body>
-
-</html>

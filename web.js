@@ -1,12 +1,4 @@
 
-
-
-
-
-
-
-
-
 /* ================= HELPERS & LIVE CLOCK ================= */
 const $ = id => document.getElementById(id);
 const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
@@ -56,7 +48,7 @@ function playBeep(freq = 880, dur = 0.2) {
 }
 
 /* ================= ESP32 LIVE CAM LINK & 'L' SHORTCUT ================= */
-const DEFAULT_ESP32_CAM_URL = 'http://10.95.93.246/stream';
+const DEFAULT_ESP32_CAM_URL = 'http://10.95.93.246//stream';
 
 function getEsp32CamUrl() {
     const input = $('esp32CamUrlInput');
@@ -114,7 +106,7 @@ const pts = Array.from({ length: 60 }, () => ({ x: Math.random() * cv.width, y: 
 })();
 
 /* ================= RENDERED SECTIONS ================= */
-if ($('problemCards')) $('problemCards').innerHTML = [
+$('problemCards').innerHTML = [
     ['fire', 'fa-fire-flame-curved', '01', 'FIRE HAZARD MONITORING', '"Detect smoke and flame conditions and trigger an early warning."', 'Smoke & Flame Sensors', 'Miniature Fire Demo Zone'],
     ['flood', 'fa-water', '02', 'FLOOD HAZARD MONITORING', '"Monitor changing water distance in the flood demonstration area."', 'Ultrasonic Distance Sensing', 'Miniature Shore Demo Area']
 ].map(([k, ic, n, t, q, s, z]) => `<div class="glass-panel glass-panel-hover p-8 rounded-2xl border-l-4 border-l-brand-${k}">
@@ -123,7 +115,7 @@ if ($('problemCards')) $('problemCards').innerHTML = [
   <p class="text-slate-300 font-rajdhani text-lg">${q}</p>
   <div class="mt-6 pt-4 border-t border-slate-800/80 text-xs font-mono text-slate-400 space-y-2"><div class="flex justify-between"><span>Sensor:</span><span class="text-white">${s}</span></div><div class="flex justify-between"><span>Demo Area:</span><span class="text-white">${z}</span></div></div></div>`).join('');
 
-if ($('flowSteps')) $('flowSteps').innerHTML = [
+$('flowSteps').innerHTML = [
     ['fa-satellite', 'SATELLITE MOVEMENT', 'Platform moves over miniature city'], ['fa-microchip', 'SENSOR DATA', 'Smoke, flame and distance readings'],
     ['fa-memory', 'MICROCONTROLLER', 'Local embedded processing'], ['fa-chart-line', 'CONDITION ANALYSIS', 'Check against hazard thresholds'],
     ['fa-triangle-exclamation', 'FIRE / FLOOD DETECT', 'State classification established'], ['fa-bell', 'EMERGENCY ALERT', 'Dashboard popup & audio']
@@ -132,23 +124,23 @@ if ($('flowSteps')) $('flowSteps').innerHTML = [
   <i class="fa-solid ${ic} text-2xl ${i >= 4 ? 'text-brand-fireOrange' : 'text-slate-300'} mb-2"></i><div class="text-xs font-bold text-white">${t}</div><p class="text-[10px] text-slate-400 mt-1">${d}</p></div>`).join('');
 
 const gallery = { gallery1: ['FIRE+DEMO+AREA', 'ff3b30', 'Fire Demonstration Area & Sensors'], gallery2: ['FLOOD+SHORE+AREA', '007aff', 'Flood Shore Zone & Ultrasonic Sensor'], gallery3: ['MICROCONTROLLER', '34c759', 'ESP32 Controller & Buzzer'] };
-if ($('galleryGrid')) $('galleryGrid').innerHTML = Object.entries(gallery).map(([k, [txt, col, cap]]) => `<div class="glass-panel p-4 rounded-xl space-y-3 group">
+$('galleryGrid').innerHTML = Object.entries(gallery).map(([k, [txt, col, cap]]) => `<div class="glass-panel p-4 rounded-xl space-y-3 group">
   <div class="relative h-48 rounded-lg bg-slate-950 overflow-hidden border border-slate-800"><img id="img-${k}" src="https://placehold.co/600x400/0a1120/${col}?text=${txt}" alt="${cap}" class="w-full h-full object-cover">
   <div class="absolute inset-0 bg-slate-950/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
    <button onclick="openLightbox('${k}')" class="p-2 rounded-lg bg-slate-900 text-brand-cyan border border-brand-cyan"><i class="fa-solid fa-expand"></i></button>
    <label class="cursor-pointer p-2 rounded-lg bg-slate-900 text-white border border-slate-700"><i class="fa-solid fa-camera"></i><input type="file" accept="image/*" class="hidden" onchange="handleImageUpload(event,'${k}')"></label></div></div>
   <div class="text-xs font-mono space-y-1"><div class="text-slate-200 font-bold" id="cap-${k}">${cap}</div><button onclick="editCaption('${k}')" class="text-[10px] text-slate-500 hover:text-brand-cyan underline">Edit Caption</button></div></div>`).join('');
 
-if ($('hwGrid')) $('hwGrid').innerHTML = [
+$('hwGrid').innerHTML = [
     ['fa-microchip', 'text-brand-cyan', 'MAIN CONTROLLER', 'ESP32 / Arduino'], ['fa-tower-broadcast', 'text-brand-fire', 'SENSORS', 'Smoke, Flame & Ultrasonic'],
     ['fa-gear', 'text-amber-400', 'MOTION', 'Satellite Track Motor'], ['fa-tv', 'text-blue-400', 'OUTPUT', 'LCD, LEDs & Buzzer'],
     ['fa-code', 'text-emerald-400', 'PROGRAMMING', 'Arduino IDE'], ['fa-brain', 'text-brand-cyan', 'FUTURE STACK', 'AI/ML & Vision (Planned)']
 ].map(([ic, c, l, v]) => `<div class="p-4 rounded-xl bg-slate-900/80 border border-slate-800 text-center space-y-2"><i class="fa-solid ${ic} text-2xl ${c}"></i><div class="text-slate-400 text-[10px]">${l}</div><div class="font-bold text-white font-orbitron">${v}</div></div>`).join('');
 
-if ($('teamGrid')) $('teamGrid').innerHTML = ['IVANKA SINGH', 'AVYUKT SAXENA', 'MITHRA VINOTHKUMAR', 'AMEERA MACEDA AHMED', 'SOHANA DOSTI'].map(n =>
+$('teamGrid').innerHTML = ['IVANKA SINGH', 'AVYUKT SAXENA', 'MITHRA VINOTHKUMAR', 'AMEERA MACEDA AHMED', 'SOHANA DOSTI'].map(n =>
     `<div class="glass-panel p-6 rounded-2xl border border-slate-800 hover:border-brand-cyan/50 transition-all text-center group"><h3 class="font-orbitron font-bold text-lg text-white group-hover:text-brand-cyan">${n}</h3><p class="font-mono text-xs text-slate-400 mt-1">CLASS 9 • 2026–2027</p></div>`).join('');
 
-if ($('roadmapGrid')) $('roadmapGrid').innerHTML = [['PHYSICAL PROTOTYPE', 'Current moving platform and sensor validation.'], ['SMART SENSORS', 'Planned sensor expansion beyond the current prototype.'], ['AI DETECTION', 'Planned AI/ML pattern classification.'], ['ALERT NETWORK', 'Mesh cloud node notification relays.'], ['LOCATION AWARE', 'Geofenced browser & push alerts.'], ['LARGE-SCALE', 'Official emergency authority grid integration.']]
+$('roadmapGrid').innerHTML = [['PHYSICAL PROTOTYPE', 'Current moving platform and sensor validation.'], ['SMART SENSORS', 'Planned sensor expansion beyond the current prototype.'], ['AI DETECTION', 'Planned AI/ML pattern classification.'], ['ALERT NETWORK', 'Mesh cloud node notification relays.'], ['LOCATION AWARE', 'Geofenced browser & push alerts.'], ['LARGE-SCALE', 'Official emergency authority grid integration.']]
     .map(([t, d], i) => `<div class="p-4 rounded-xl bg-slate-900/80 border ${i == 0 ? 'border-brand-cyan/30' : 'border-slate-800'} text-center space-y-2"><div class="${i == 0 ? 'text-brand-cyan' : 'text-slate-300'} font-bold font-orbitron">0${i + 1}. ${t}</div><p class="text-[11px] text-slate-400">${d}</p></div>`).join('');
 
 /* ================= DEMO SIMULATION + LIVE FIREBASE TELEMETRY ================= */
@@ -161,7 +153,6 @@ const initialFeedItems = [
     { id: '3', type: 'FIRE', title: 'SMOKE SENSOR TEST', location: 'Satellite Track Section 02', time: '1 hour ago', status: 'RESOLVED' }
 ];
 function renderGlobalFeed() {
-    if (!$('globalFeedList')) return;
     $('globalFeedList').innerHTML = initialFeedItems.map(i => {
         const f = i.type === 'FIRE';
         return `<div class="p-4 rounded-xl glass-panel border ${f ? 'border-brand-fire/30' : 'border-brand-flood/30'} flex flex-col sm:flex-row sm:items-center justify-between gap-3">
@@ -172,7 +163,7 @@ function renderGlobalFeed() {
 }
 renderGlobalFeed();
 
-function setBanner(cls, dot, html) { if ($('homepageEmergencyBanner')) $('homepageEmergencyBanner').className = 'relative z-30 ' + cls + ' py-2.5 px-4 text-center text-xs font-mono'; if ($('bannerStatusDot')) $('bannerStatusDot').className = 'w-2.5 h-2.5 rounded-full animate-ping ' + dot; if ($('bannerText')) $('bannerText').innerHTML = html; }
+function setBanner(cls, dot, html) { $('homepageEmergencyBanner').className = 'relative z-30 ' + cls + ' py-2.5 px-4 text-center text-xs font-mono'; $('bannerStatusDot').className = 'w-2.5 h-2.5 rounded-full animate-ping ' + dot; $('bannerText').innerHTML = html; }
 
 function triggerDemoSimulation(type) {
     const ok = '<span class="text-emerald-400">NORMAL</span>';
@@ -196,55 +187,50 @@ function triggerDemoSimulation(type) {
 
 async function pollFirebaseAlerts() {
     try {
-        const controller = new AbortController();
-        const timeoutId = setTimeout(() => controller.abort(), 4000);
-        let res;
-        try {
-            res = await fetch(FIREBASE_ALERT_URL + '?_=' + Date.now(), {
-                method: 'GET', cache: 'no-store', signal: controller.signal
-            });
-        } finally {
-            clearTimeout(timeoutId);
-        }
-        if (!res.ok) throw new Error('Firebase HTTP ' + res.status);
+        const res = await fetch(FIREBASE_ALERT_URL + '?t=' + Date.now());
+        if (!res.ok) throw new Error('HTTP ' + res.status);
         const data = await res.json();
 
         if ($('firebaseSyncStatus')) {
             $('firebaseSyncStatus').innerHTML = '<i class="fa-solid fa-database text-brand-success mr-1.5"></i>CLOUD TELEMETRY: <span class="text-brand-success font-bold">CONNECTED</span>';
         }
+
         if (!data) return;
 
-        if ($('liveSmokeVal') && data.smoke !== undefined) $('liveSmokeVal').innerText = data.smoke;
-        const typeText = String(data.type || '').toUpperCase();
-        const isFireAlert = data.status === 'ACTIVE' && /(FIRE|FLAME|SMOKE)/.test(typeText);
-        if ($('liveFlameVal')) {
-            $('liveFlameVal').innerText = (isFireAlert && /(FLAME|FIRE)/.test(typeText)) ? 'DETECTED' : 'CLEAR';
-            $('liveFlameVal').className = (isFireAlert && /(FLAME|FIRE)/.test(typeText))
+        if ($('liveSmokeVal') && data.smoke !== undefined) {
+            $('liveSmokeVal').innerText = data.smoke;
+        }
+        if ($('liveFlameVal') && data.type) {
+            const hasFlame = data.type.includes('FLAME') || data.type.includes('FIRE');
+            $('liveFlameVal').innerText = (data.status === 'ACTIVE' && hasFlame) ? 'DETECTED' : 'CLEAR';
+            $('liveFlameVal').className = (data.status === 'ACTIVE' && hasFlame)
                 ? 'text-xl font-orbitron font-bold text-brand-fire animate-pulse'
                 : 'text-xl font-orbitron font-bold text-emerald-400';
         }
 
-        const alertKey = String(data.id || '') + '_' + String(data.status || '') + '_' + typeText;
+        const alertKey = `${data.id || ''}_${data.status || ''}_${data.type || ''}`;
         if (alertKey === lastHandledAlertId) return;
         lastHandledAlertId = alertKey;
 
-        if (isFireAlert) {
+        if (data.status === 'ACTIVE') {
             const title = data.type || 'FIRE HAZARD DETECTED';
             const loc = data.location || 'Miniature Demo City - Zone A';
-            const desc = `Live ESP32 Sensor Alert (${title}) | MQ sensor reading: ${data.smoke ?? '--'} | Time: ${data.time || 'LIVE'}`;
+            const desc = `Live ESP32 Sensor Alert (${title}) | MQ-2 Smoke Reading: ${data.smoke ?? '--'} | Time: ${data.time || 'LIVE'}`;
 
-            if ($('dashFireStatus')) $('dashFireStatus').innerHTML = `<span class="text-brand-fire font-bold animate-pulse">${esc(title)}</span>`;
-            if ($('heroSmokeReadout')) {
-                $('heroSmokeReadout').innerText = 'ALERT';
-                $('heroSmokeReadout').className = 'text-brand-fire';
-            }
+            $('dashFireStatus').innerHTML = `<span class="text-brand-fire font-bold animate-pulse">${esc(title)}</span>`;
+            if ($('heroSmokeReadout')) { $('heroSmokeReadout').innerText = 'ALERT'; $('heroSmokeReadout').className = 'text-brand-fire'; }
             setBanner('bg-red-950/90 border-b border-brand-fire/50', 'bg-brand-fire', `STATUS: <span class="text-brand-fire font-bold tracking-wider">${esc(title)} AT ${esc(loc.toUpperCase())}</span>`);
+
             openEmergencyModal('FIRE', title, loc, desc);
             playBeep(900, 0.45);
 
             initialFeedItems.unshift({
-                id: String(data.id || Date.now()), type: 'FIRE', title,
-                location: loc, time: data.time || 'Just now', status: 'LIVE ESP32 ALERT'
+                id: String(data.id || Date.now()),
+                type: 'FIRE',
+                title: title,
+                location: loc,
+                time: data.time || 'Just now',
+                status: 'LIVE ESP32 ALERT'
             });
             if (initialFeedItems.length > 8) initialFeedItems.pop();
             renderGlobalFeed();
@@ -254,18 +240,16 @@ async function pollFirebaseAlerts() {
     } catch (err) {
         if ($('firebaseSyncStatus')) {
             $('firebaseSyncStatus').innerHTML = '<i class="fa-solid fa-database text-amber-400 mr-1.5"></i>CLOUD TELEMETRY: <span class="text-amber-400">OFFLINE</span>';
-            $('firebaseSyncStatus').title = err.message || String(err);
         }
     }
 }
 
 triggerDemoSimulation('NORMAL');
 pollFirebaseAlerts();
-setInterval(pollFirebaseAlerts, 1000);
+setInterval(pollFirebaseAlerts, 2500);
 
 /* ================= MODALS ================= */
 function openEmergencyModal(type, title, loc, desc) {
-    if (!$('emergencyModal') || !$('emergencyModalTitle')) return;
     const fire = type === 'FIRE', t = $('emergencyModalTitle');
     t.innerText = title; $('emergencyModalLoc').innerText = loc; $('emergencyModalTime').innerText = new Date().toLocaleTimeString() + ' IST';
     if (desc) $('emergencyModalDesc').innerText = '"' + desc + '"';
@@ -274,13 +258,13 @@ function openEmergencyModal(type, title, loc, desc) {
     t.className = `font-orbitron font-black text-2xl ${fire ? 'text-brand-fire' : 'text-brand-flood'}`;
     $('emergencyModal').classList.remove('hidden');
 }
-const closeEmergencyModal = () => { if ($('emergencyModal')) $('emergencyModal').classList.add('hidden'); };
+const closeEmergencyModal = () => $('emergencyModal').classList.add('hidden');
 const openAccountModal = () => $('accountModal').classList.remove('hidden');
 const closeAccountModal = () => $('accountModal').classList.add('hidden');
 const openShareModal = () => { $('shareUrlInput').value = location.origin + '/#alerts'; $('shareModal').classList.remove('hidden'); };
 const closeShareModal = () => $('shareModal').classList.add('hidden');
-function copyShareUrl() { const i = $('shareUrlInput'); if (!i) return; i.select(); (navigator.clipboard ? navigator.clipboard.writeText(i.value) : Promise.resolve(document.execCommand('copy'))).then(() => { alert('Emergency Alert Link copied to clipboard!'); closeShareModal(); }); }
-function toggleMobileMenu() { const m = $('mobileMenu'); if (!m) return; const h = m.classList.toggle('hidden'); if ($('mobileMenuBtn')) $('mobileMenuBtn').setAttribute('aria-expanded', String(!h)); }
+function copyShareUrl() { const i = $('shareUrlInput'); i.select(); (navigator.clipboard ? navigator.clipboard.writeText(i.value) : Promise.resolve(document.execCommand('copy'))).then(() => { alert('Emergency Alert Link copied to clipboard!'); closeShareModal(); }); }
+function toggleMobileMenu() { const m = $('mobileMenu'), h = m.classList.toggle('hidden'); $('mobileMenuBtn').setAttribute('aria-expanded', String(!h)); }
 function scrollToSection(id) { const e = $(id); if (e) e.scrollIntoView({ behavior: 'smooth' }); }
 
 /* ================= ACCOUNT: COUNTRY -> CITY DROPDOWNS ================= */
@@ -303,22 +287,21 @@ const COUNTRY_CITIES = {
     "Brazil": ["Sao Paulo", "Rio de Janeiro", "Brasilia"],
     "South Africa": ["Johannesburg", "Cape Town", "Durban"]
 };
-function populateCities() { if (!$('accCountry') || !$('accCity')) return; $('accCity').innerHTML = (COUNTRY_CITIES[$('accCountry').value] || []).map(n => `<option value="${n}">${n}</option>`).join(''); }
-if ($('accCountry')) { $('accCountry').innerHTML = Object.keys(COUNTRY_CITIES).map(n => `<option value="${n}">${n}</option>`).join(''); $('accCountry').value = 'India'; populateCities(); }
+function populateCities() { $('accCity').innerHTML = (COUNTRY_CITIES[$('accCountry').value] || []).map(n => `<option value="${n}">${n}</option>`).join(''); }
+$('accCountry').innerHTML = Object.keys(COUNTRY_CITIES).map(n => `<option value="${n}">${n}</option>`).join(''); $('accCountry').value = 'India'; populateCities();
 function saveAccountPreferences(e) {
     e.preventDefault();
-    if (!$('accName') || !$('accCity') || !$('accCountry')) return;
     const name = $('accName').value, city = $('accCity').value, country = $('accCountry').value;
-    if ($('savedLocationDisplay')) $('savedLocationDisplay').innerText = `LOCATION: ${city.toUpperCase()}, ${country.toUpperCase()}`;
-    if ($('userBtnLabel')) $('userBtnLabel').innerText = name.split(' ')[0].toUpperCase();
+    $('savedLocationDisplay').innerText = `LOCATION: ${city.toUpperCase()}, ${country.toUpperCase()}`;
+    $('userBtnLabel').innerText = name.split(' ')[0].toUpperCase();
     closeAccountModal(); alert(`Account saved for ${name}. Preferred Location: ${city}, ${country}`);
 }
 
 /* ================= GALLERY ================= */
-function handleImageUpload(ev, key) { const f = ev.target.files[0], img = $('img-' + key); if (!f || !img) return; const r = new FileReader(); r.onload = e => { img.src = e.target.result; }; r.readAsDataURL(f); }
-function editCaption(key) { const c = prompt('Enter custom photo caption:'), el = $('cap-' + key); if (c && el) el.innerText = c; }
-function openLightbox(key) { const img = $('img-' + key); if (!$('lightboxImg') || !$('lightboxCaption') || !$('lightboxModal') || !img) return; $('lightboxImg').src = img.src; $('lightboxCaption').innerText = $('cap-' + key)?.innerText || ''; $('lightboxModal').classList.remove('hidden'); }
-const closeLightbox = () => { if ($('lightboxModal')) $('lightboxModal').classList.add('hidden'); };
+function handleImageUpload(ev, key) { const f = ev.target.files[0]; if (!f) return; const r = new FileReader(); r.onload = e => { $('img-' + key).src = e.target.result; }; r.readAsDataURL(f); }
+function editCaption(key) { const c = prompt('Enter custom photo caption:'); if (c) $('cap-' + key).innerText = c; }
+function openLightbox(key) { $('lightboxImg').src = $('img-' + key).src; $('lightboxCaption').innerText = $('cap-' + key).innerText; $('lightboxModal').classList.remove('hidden'); }
+const closeLightbox = () => $('lightboxModal').classList.add('hidden');
 
 /* ================= AI CHATBOT ================= */
 const chatHistory = [];
@@ -328,15 +311,14 @@ const FALLBACK = [
     [/sensor|arduino|esp32|how.*work/i, "Bharat Astra reads smoke, flame and ultrasonic sensors with a microcontroller, compares them to thresholds, then raises an alert with a popup, buzzer and live feed."],
     [/hello|hi\b|hey/i, "Hi! I'm the Astra assistant. Ask me about fire safety, flood safety, or how this system works."]
 ];
-function toggleChat() { const p = $('chatPanel'); if (!p) return; p.classList.toggle('hidden'); if (!p.classList.contains('hidden') && $('chatLog') && !$('chatLog').children.length) addChatMsg("Hi! I'm the Astra AI assistant. Ask me about fire or flood safety, or how Bharat Astra works.", 'bot'); }
+function toggleChat() { const p = $('chatPanel'); p.classList.toggle('hidden'); if (!p.classList.contains('hidden') && !$('chatLog').children.length) addChatMsg("Hi! I'm the Astra AI assistant. Ask me about fire or flood safety, or how Bharat Astra works.", 'bot'); }
 function addChatMsg(text, who) {
-    if (!$('chatLog')) return { textContent: '' };
     const d = document.createElement('div');
     d.className = who === 'user' ? 'ml-8 p-2 rounded-lg bg-brand-cyan/20 text-white' : 'mr-8 p-2 rounded-lg bg-slate-900 border border-slate-800 text-slate-200';
     d.textContent = text; $('chatLog').appendChild(d); $('chatLog').scrollTop = $('chatLog').scrollHeight; return d;
 }
 async function sendChat() {
-    const inp = $('chatInput'); if (!inp) return; const text = inp.value.trim(); if (!text) return;
+    const inp = $('chatInput'), text = inp.value.trim(); if (!text) return;
     inp.value = ''; addChatMsg(text, 'user'); chatHistory.push({ role: 'user', content: text });
     const typing = addChatMsg('...', 'bot'); let reply;
     try {
