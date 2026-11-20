@@ -1,5 +1,3 @@
-
-
 const $ = id => document.getElementById(id);
 const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 
@@ -296,6 +294,7 @@ const FIREBASE_FIRE_URL = 'https://bharatastra-154d9-default-rtdb.asia-southeast
 
 let fireAlertActive = false;
 let floodAlertActive = false;
+let fireSensorOnline = false;
 
 let isInitialFetch = true;
 let fireInitialFetch = true;
@@ -455,13 +454,42 @@ function updateCombinedAlertDisplay() {
             latestTelemetry.device,
             false
         );
+        updateFireSensorIndicator();
+        return;
+    }
 
-    } else if (fireAlertActive && latestFireAlert) {
+    if (fireSensorOnline && fireAlertActive && latestFireAlert) {
         showLiveFireAlert(latestFireAlert, false);
+        return;
+    }
 
-    } else {
-        closeEmergencyModal();
-        triggerDemoSimulation('NORMAL');
+    closeEmergencyModal();
+    triggerDemoSimulation('NORMAL');
+    updateFireSensorIndicator();
+}
+
+function updateFireSensorIndicator() {
+    if ($('dashFireStatus')) {
+        if (!fireSensorOnline) {
+            $('dashFireStatus').innerHTML =
+                '<span class="text-amber-400">SENSOR OFFLINE</span>';
+        } else if (fireAlertActive) {
+            $('dashFireStatus').innerHTML =
+                '<span class="text-brand-fire font-bold animate-pulse">SMOKE ALERT</span>';
+        } else {
+            $('dashFireStatus').innerHTML =
+                '<span class="text-emerald-400">NORMAL</span>';
+        }
+    }
+
+    if ($('heroSmokeReadout')) {
+        $('heroSmokeReadout').innerText =
+            !fireSensorOnline ? 'OFFLINE' :
+            fireAlertActive ? 'SMOKE ALERT' : 'CLEAR';
+
+        $('heroSmokeReadout').className =
+            !fireSensorOnline ? 'text-amber-400' :
+            fireAlertActive ? 'text-brand-fire' : 'text-emerald-400';
     }
 }
 
@@ -618,54 +646,44 @@ function showLiveMpuAlert(angle, eventId, device, playSound = true) {
 /* ================= SMOKE / FIRE ALERT ================= */
 
 function showLiveFireAlert(data, playSound = true) {
-    if (!data) return;
+    if (!data || !fireSensorOnline || !fireAlertActive) return;
 
     latestFireAlert = data;
 
-    fireAlertActive =
-        String(data.status || '').toUpperCase() === 'ACTIVE';
-
     const kind = String(data.type || 'SMOKE').toUpperCase();
-
     const smokeValue = Number(data.smoke ?? 0);
     const smoke = Number.isFinite(smokeValue) ? smokeValue : 0;
 
+    // Flood takes display priority when both alerts are active.
+    if (floodAlertActive) {
+        updateFireSensorIndicator();
+        return;
+    }
+
     if ($('dashFireStatus')) {
-        $('dashFireStatus').innerHTML = fireAlertActive
-            ? `<span class="text-brand-fire font-bold animate-pulse">${esc(kind)} ALERT</span>`
-            : '<span class="text-emerald-400">NORMAL</span>';
+        $('dashFireStatus').innerHTML =
+            `<span class="text-brand-fire font-bold animate-pulse">${esc(kind)} ALERT</span>`;
     }
 
     if ($('heroSmokeReadout')) {
-        $('heroSmokeReadout').innerText =
-            fireAlertActive ? `${kind} ALERT` : 'CLEAR';
-
-        $('heroSmokeReadout').className =
-            fireAlertActive ? 'text-brand-fire' : 'text-emerald-400';
+        $('heroSmokeReadout').innerText = `${kind} ALERT`;
+        $('heroSmokeReadout').className = 'text-brand-fire';
     }
 
-    // Flood takes display priority when both alerts are active.
-    if (floodAlertActive) return;
+    setBanner(
+        'bg-red-950/90 border-b border-brand-fire/50',
+        'bg-brand-fire',
+        `STATUS: <span class="text-brand-fire font-bold tracking-wider">LIVE ${esc(kind)} ALERT DETECTED</span> — SMOKE: ${smoke}`
+    );
 
-    if (fireAlertActive) {
-        setBanner(
-            'bg-red-950/90 border-b border-brand-fire/50',
-            'bg-brand-fire',
-            `STATUS: <span class="text-brand-fire font-bold tracking-wider">LIVE ${esc(kind)} ALERT DETECTED</span> — SMOKE: ${smoke}`
-        );
+    openEmergencyModal(
+        'FIRE',
+        `${kind} HAZARD DETECTED`,
+        data.location || 'Miniature Fire Demonstration Area',
+        `Live ESP32 ${kind} alert. Smoke reading: ${smoke}. Event #${data.id ?? '—'}`
+    );
 
-        openEmergencyModal(
-            'FIRE',
-            `${kind} HAZARD DETECTED`,
-            data.location || 'Miniature Fire Demonstration Area',
-            `Live ESP32 ${kind} alert. Smoke reading: ${smoke}. Event #${data.id ?? '—'}`
-        );
-
-        if (playSound) playBeep(900, 0.4);
-
-    } else {
-        updateCombinedAlertDisplay();
-    }
+    if (playSound) playBeep(900, 0.4);
 }
 
 async function pollFireAlerts() {
@@ -680,41 +698,39 @@ async function pollFireAlerts() {
         }
 
         const data = await response.json();
-        if (!data) return;
 
-        latestFireAlert = data;
-
-        const active =
-            String(data.status || '').toUpperCase() === 'ACTIVE';
-
-        // First read: sync the website with Firebase without a surprise beep.
-        if (fireInitialFetch) {
-            fireInitialFetch = false;
-            fireAlertActive = active;
-
-            if (active) {
-                addAlertToFeed(
-                    `FIRE-${data.id ?? data.time ?? 'INITIAL'}`,
-                    'FIRE',
-                    `${String(data.type || 'SMOKE').toUpperCase()} ALERT`,
-                    data.location || 'Miniature Fire Demonstration Area'
-                );
-            }
-
+        if (!data) {
+            fireSensorOnline = false;
+            fireAlertActive = false;
             updateCombinedAlertDisplay();
             return;
         }
 
-        // Ignore changing IDs/timestamps while the sensor remains ACTIVE.
-        // Only CLEAR -> ACTIVE or ACTIVE -> CLEAR is a new state change.
-        if (active === fireAlertActive) {
-            latestFireAlert = data; // Keep the latest sensor reading for display.
-            return;
-        }
+        latestFireAlert = data;
 
+        // The smoke ESP32 updates this timestamp every 5 seconds.
+        // If it stops updating for 15 seconds, treat the sensor as offline.
+        const updatedAt = Number(data.updatedAt ?? 0);
+        const ageMs = Date.now() - updatedAt;
+
+        const online =
+            data.online === true &&
+            updatedAt > 0 &&
+            ageMs >= -60000 &&
+            ageMs <= 15000;
+
+        const active =
+            online &&
+            String(data.status || '').toUpperCase() === 'ACTIVE';
+
+        const wasOnline = fireSensorOnline;
+        const wasActive = fireAlertActive;
+
+        fireSensorOnline = online;
         fireAlertActive = active;
 
-        if (active) {
+        // Only a genuine online CLEAR -> ACTIVE transition creates a new alert.
+        if (active && (!wasActive || !wasOnline)) {
             addAlertToFeed(
                 `FIRE-${data.id ?? data.time ?? Date.now()}`,
                 'FIRE',
@@ -722,17 +738,19 @@ async function pollFireAlerts() {
                 data.location || 'Miniature Fire Demonstration Area'
             );
 
-            // One website beep per CLEAR -> ACTIVE transition.
             if (!floodAlertActive) {
                 showLiveFireAlert(data, true);
             }
         }
 
-        // Also handles ACTIVE -> CLEAR and restores any remaining flood alert.
         updateCombinedAlertDisplay();
 
     } catch (error) {
         console.error('Bharat Astra fire-alert read failed:', error);
+
+        fireSensorOnline = false;
+        fireAlertActive = false;
+        updateCombinedAlertDisplay();
 
         if ($('firebaseSyncStatus')) {
             $('firebaseSyncStatus').innerHTML =
@@ -1049,7 +1067,3 @@ async function sendChat() {
 
     chatHistory.push({ role: 'assistant', content: reply });
 }
-
-
-
-
